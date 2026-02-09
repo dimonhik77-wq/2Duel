@@ -3,64 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2DUELS PRO</title>
+    <title>2DUELS PREMIER</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00f2ff; --purple: #7000ff; --bg: #000; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; justify-content: center; }
-        
-        .glow { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(112,0,255,0.15), transparent 80%); z-index: -1; animation: pulse 5s infinite alternate; }
-        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
-
-        .container { width: 90%; max-width: 400px; text-align: center; animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .logo { font-family: 'Orbitron'; font-size: 35px; letter-spacing: 5px; margin-bottom: 30px; text-shadow: 0 0 20px var(--accent); }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 35px;
-            padding: 40px 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        :root {
+            --accent: #00f2ff;
+            --bg: #050507;
+            --panel: rgba(255, 255, 255, 0.02);
+            --border: rgba(0, 242, 255, 0.2);
         }
 
-        .btn {
-            background: #fff;
-            color: #000;
-            border: none;
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Анимированная сетка на фоне */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center;
+            opacity: 0.1;
+            z-index: -1;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
+
+        /* Шапка с данными юзера */
+        .user-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 45px; height: 45px;
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            background: var(--panel);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron'; color: var(--accent);
+        }
+
+        .user-meta { font-size: 10px; color: #666; text-transform: uppercase; }
+        .username { font-family: 'Orbitron'; font-size: 14px; color: #fff; margin-top: 2px; }
+
+        .sys-stats { text-align: right; font-size: 9px; color: var(--accent); opacity: 0.7; }
+
+        /* Контент */
+        .container {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Визуализация игр */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .game-card {
+            background: var(--panel);
+            border: 1px solid rgba(255,255,255,0.05);
             border-radius: 20px;
-            padding: 18px;
-            width: 100%;
-            font-weight: 900;
-            font-size: 15px;
-            text-transform: uppercase;
-            margin-top: 25px;
-            transition: 0.2s;
+            padding: 25px 15px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
         }
 
-        .btn:active { transform: scale(0.95); background: var(--accent); }
+        .game-card::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); opacity: 0; transition: 0.3s;
+        }
+
+        .game-card:active {
+            background: rgba(0, 242, 255, 0.05);
+            border-color: var(--accent);
+        }
+        .game-card:active::after { opacity: 1; }
+
+        .game-card h3 { font-family: 'Orbitron'; font-size: 12px; letter-spacing: 2px; margin-top: 10px; }
+        .game-card span { font-size: 24px; }
+
+        /* Футер (меню) */
+        .nav {
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.5);
+            border-top: 1px solid var(--border);
+        }
+        .nav-btn { font-size: 18px; opacity: 0.4; transition: 0.3s; }
+        .nav-btn.active { opacity: 1; color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+
     </style>
 </head>
 <body>
-    <div class="glow"></div>
-    <div class="container">
-        <div class="logo">2DUELS</div>
-        <div class="glass-card">
-            <div style="color: var(--accent); font-size: 10px; letter-spacing: 4px; margin-bottom: 10px;">PREMIUM ACCESS</div>
-            <div style="font-size: 22px; font-weight: 700;">СИСТЕМА ГОТОВА</div>
-            <p style="color: #666; font-size: 14px;">Новый проект успешно запущен.</p>
-            <button class="btn" onclick="tg.HapticFeedback.impactOccurred('heavy')">ПОГНАЛИ</button>
+    <div class="grid-bg"></div>
+
+    <div class="user-header">
+        <div class="user-info">
+            <div class="avatar" id="avatar-init">?</div>
+            <div>
+                <div class="user-meta" id="ip-display">FETCHING IP...</div>
+                <div class="username" id="user-name">GUEST_PLAYER</div>
+            </div>
+        </div>
+        <div class="sys-stats">
+            ID: <span id="user-id">000000</span><br>
+            PING: 24ms<br>
+            VER: 2.0.4
         </div>
     </div>
+
+    <div class="container">
+        <div style="font-size: 10px; color: #444; letter-spacing: 4px;">MAIN_DIRECTORIES</div>
+        
+        <div class="game-grid">
+            <div class="game-card" onclick="tgVibrate()">
+                <span>💣</span>
+                <h3>MINES</h3>
+            </div>
+            <div class="game-card" onclick="tgVibrate()">
+                <span>📈</span>
+                <h3>CRASH</h3>
+            </div>
+            <div class="game-card" onclick="tgVibrate()">
+                <span>🎲</span>
+                <h3>DICE</h3>
+            </div>
+            <div class="game-card" onclick="tgVibrate()">
+                <span>🎰</span>
+                <h3>SLOTS</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-btn active">⌘</div>
+        <div class="nav-btn">⏚</div>
+        <div class="nav-btn">⌬</div>
+        <div class="nav-btn">⚙</div>
+    </div>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = '#000000';
+        tg.headerColor = '#050507';
+        tg.backgroundColor = '#050507';
+
+        // Подгружаем реальные данные из ТГ
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = (user.username || user.first_name).toUpperCase();
+            document.getElementById('user-id').innerText = user.id;
+            document.getElementById('avatar-init').innerText = user.first_name[0].toUpperCase();
+        }
+
+        // Имитация IP (можно подтянуть через API, но для дизайна пока так)
+        document.getElementById('ip-display').innerText = "IP: 188.162.0." + Math.floor(Math.random() * 255);
+
+        function tgVibrate() {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
     </script>
 </body>
 </html>
