@@ -1090,3 +1090,180 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; user-select: none; }
+        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .hidden { display: none; }
+        
+        /* Анимация появления экранов */
+        .page-active { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* КНБ Анимация жестов */
+        .rps-choice { transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .rps-choice:active { transform: scale(0.8) rotate(-5deg); }
+        .rps-selected { border: 3px solid #007aff !important; box-shadow: 0 0 20px rgba(0,122,255,0.4); transform: scale(1.05); }
+
+        /* Мины 3D Flip */
+        .mine-card { perspective: 1000px; aspect-ratio: 1/1; }
+        .mine-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flipped { transform: rotateY(180deg); }
+        .mine-front, .mine-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; display: flex; items-center; justify-content: center; }
+        .mine-front { background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); }
+        .mine-back { transform: rotateY(180deg); }
+
+        /* Монетка */
+        .coin-spin { animation: coinRotate 3s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+        @keyframes coinRotate { from { transform: rotateY(0deg); } to { transform: rotateY(1800deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="p-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-bold">⭐</div>
+            <span id="global-balance" class="text-xl font-black italic">1000</span>
+        </div>
+        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            <span class="text-green-500">●</span> <span id="online-val">142</span> online
+        </div>
+    </div>
+
+    <div id="screen-solo" class="p-4 page-active">
+        <div class="space-y-4">
+            <div onclick="openGame('mines')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all cursor-pointer border-l-4 border-orange-500">
+                <div><h2 class="text-xl font-black italic uppercase">Mines PvP</h2><p class="text-xs text-gray-400">Field 3x3</p></div>
+                <div class="text-3xl">💣</div>
+            </div>
+            <div onclick="openGame('rps')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all cursor-pointer border-l-4 border-blue-500">
+                <div><h2 class="text-xl font-black italic uppercase">RPS Battle</h2><p class="text-xs text-gray-400">Rock Paper Scissors</p></div>
+                <div class="text-3xl">✊</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game-mines" class="p-4 hidden flex-col items-center">
+        <div class="w-full flex justify-between mb-10"><button onclick="closeGame()" class="text-gray-500 font-bold">✕ BACK</button><span class="text-orange-500 font-black italic">MINES</span><div></div></div>
+        <div id="mines-grid" class="grid grid-cols-3 gap-3 w-full max-w-[320px]"></div>
+        <button id="mines-start" onclick="initMines()" class="mt-10 w-full bg-orange-600 p-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-orange-600/20">Start Game (100 ⭐)</button>
+    </div>
+
+    <div id="screen-game-rps" class="p-4 hidden flex-col items-center text-center">
+        <div class="w-full flex justify-between mb-8"><button onclick="closeGame()" class="text-gray-500 font-bold">✕ BACK</button><span class="text-blue-500 font-black italic">RPS BATTLE</span><div></div></div>
+        <div id="rps-result" class="text-4xl font-black italic mb-10 h-10">WHO WINS?</div>
+        <div class="grid grid-cols-3 gap-4 w-full">
+            <div id="rps-rock" onclick="playRPS('rock')" class="glass rps-choice p-6 text-3xl cursor-pointer">✊</div>
+            <div id="rps-paper" onclick="playRPS('paper')" class="glass rps-choice p-6 text-3xl cursor-pointer">✋</div>
+            <div id="rps-scissors" onclick="playRPS('scissors')" class="glass rps-choice p-6 text-3xl cursor-pointer">✌️</div>
+        </div>
+    </div>
+
+    <div id="screen-market" class="hidden p-10 text-center flex-col items-center justify-center min-h-[60vh]">
+        <div class="text-6xl mb-4">🏪</div>
+        <h1 class="text-4xl font-black italic uppercase">Market</h1>
+        <p class="text-blue-500 font-bold tracking-widest mt-2 uppercase text-[10px]">Coming soon in update 2.0</p>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/5 flex justify-around py-5 z-50">
+        <div onclick="showTab('solo')" class="flex flex-col items-center gap-1 opacity-100 text-blue-500"><span class="text-xl">⚙️</span><span class="text-[9px] font-bold">GAMES</span></div>
+        <div onclick="showTab('market')" class="flex flex-col items-center gap-1 opacity-50"><span class="text-xl">🏪</span><span class="text-[9px] font-bold">MARKET</span></div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+            storageBucket: "duels-1fb6b.firebasestorage.app",
+            messagingSenderId: "745698956226",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let balance = 1000;
+
+        // --- ОБЩАЯ НАВИГАЦИЯ ---
+        window.showTab = (id) => {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + id).classList.remove('hidden');
+        };
+
+        window.openGame = (game) => {
+            document.getElementById('screen-solo').classList.add('hidden');
+            document.getElementById('screen-game-' + game).classList.remove('hidden');
+            if(game === 'mines') initMines();
+        };
+
+        window.closeGame = () => {
+            document.querySelectorAll('[id^="screen-game-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-solo').classList.remove('hidden');
+        };
+
+        // --- ЛОГИКА MINES ---
+        let minesPos = [];
+        window.initMines = () => {
+            const grid = document.getElementById('mines-grid');
+            grid.innerHTML = '';
+            minesPos = [Math.floor(Math.random()*9), Math.floor(Math.random()*9)];
+            for(let i=0; i<9; i++) {
+                grid.innerHTML += `
+                    <div class="mine-card" onclick="flipMine(this, ${i})">
+                        <div class="mine-inner" id="mine-${i}">
+                            <div class="mine-front"></div>
+                            <div class="mine-back bg-blue-600 text-2xl">💎</div>
+                        </div>
+                    </div>`;
+            }
+        };
+
+        window.flipMine = (el, idx) => {
+            const inner = el.querySelector('.mine-inner');
+            if(inner.classList.contains('flipped')) return;
+            inner.classList.add('flipped');
+            if(minesPos.includes(idx)) {
+                inner.querySelector('.mine-back').className = "mine-back bg-red-600 text-2xl";
+                inner.querySelector('.mine-back').innerText = "💣";
+                setTimeout(() => { alert("BOOM!"); initMines(); }, 500);
+            } else {
+                balance += 50;
+                document.getElementById('global-balance').innerText = balance;
+            }
+        };
+
+        // --- ЛОГИКА RPS ---
+        window.playRPS = (userChoice) => {
+            const choices = ['rock', 'paper', 'scissors'];
+            const botChoice = choices[Math.floor(Math.random()*3)];
+            const icons = { rock: '✊', paper: '✋', scissors: '✌️' };
+            
+            document.querySelectorAll('.rps-choice').forEach(b => b.classList.remove('rps-selected'));
+            document.getElementById('rps-' + userChoice).classList.add('rps-selected');
+            
+            const resEl = document.getElementById('rps-result');
+            resEl.innerText = icons[botChoice] + " VS " + icons[userChoice];
+            
+            if(userChoice === botChoice) resEl.style.color = "gray";
+            else if((userChoice==='rock' && botChoice==='scissors') || (userChoice==='paper' && botChoice==='rock') || (userChoice==='scissors' && botChoice==='paper')) {
+                resEl.style.color = "#34c759";
+                balance += 200;
+            } else {
+                resEl.style.color = "#ff3b30";
+                balance -= 100;
+            }
+            document.getElementById('global-balance').innerText = balance;
+        };
+    </script>
+</body>
+</html>
