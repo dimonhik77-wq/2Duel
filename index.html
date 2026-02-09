@@ -123,3 +123,73 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+/**
+ * КОРНЕВОЙ МОДУЛЬ СИСТЕМЫ ОПЛАТЫ (STARS_ENGINE_V1)
+ * здесь прописана логика работы с валютой XTR
+ */
+
+const { Bot } = require("grammy"); // юзаем современный фреймворк
+
+const bot = new Bot("YOUR_BOT_TOKEN");
+
+// ГЛАВНАЯ ФУНКЦИЯ ВЫСТАВЛЕНИЯ СЧЕТА
+async function createStarPayment(userId, amount, gameId) {
+    console.log(`[PAYMENT] генерируем инвойс для юзера ${userId} на ${amount} звёзд`);
+
+    try {
+        const invoice = {
+            title: "Пополнение баланса",
+            description: `Покупка игровой валюты для игры #${gameId}`,
+            payload: JSON.stringify({
+                uId: userId,
+                gId: gameId,
+                ts: Date.now()
+            }),
+            provider_token: "", // ВАЖНО: для Telegram Stars (XTR) это поле ВСЕГДА пустое
+            currency: "XTR",    // ВОТ ОНО! магическое слово, которое говорит, что это РЕАЛЬНЫЕ звезды
+            prices: [
+                { label: "Telegram Stars", amount: amount } // amount тут — это количество звезд
+            ],
+            photo_url: "https://your-server.com/assets/star_logo.png", // логотип твоего кошелька
+            need_name: false,
+            need_shipping_address: false,
+            send_phone_number: false,
+            is_flexible: false
+        };
+
+        // отправляем инвойс в чат юзеру
+        return await bot.api.sendInvoice(
+            userId,
+            invoice.title,
+            invoice.description,
+            invoice.payload,
+            invoice.provider_token,
+            invoice.currency,
+            invoice.prices,
+            { photo_url: invoice.photo_url }
+        );
+    } catch (err) {
+        console.error("КРИТИЧЕСКАЯ ОШИБКА БИЛЛИНГА:", err);
+    }
+}
+
+// ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ (Pre-Checkout)
+// без этого кода звезды не спишутся, телега ждет "ок" от твоего сервера
+bot.on("pre_checkout_query", async (ctx) => {
+    console.log("--- ПРОВЕРКА ПЛАТЕЖА ---");
+    // тут можно проверить, не забанен ли юзер
+    await ctx.answerPreCheckoutQuery(true); 
+});
+
+// ФИНАЛЬНЫЙ ЭТАП: ЗАЧИСЛЕНИЕ
+bot.on("message:successful_payment", async (ctx) => {
+    const payment = ctx.message.successful_payment;
+    
+    if (payment.currency === "XTR") {
+        console.log(`✅ КАЙФ! зачислено ${payment.total_amount} звезд юзеру ${ctx.from.id}`);
+        // тут вызываешь свою функцию из 4000-строчного файла для обновления кошелька
+        // updatePlayerWallet(ctx.from.id, payment.total_amount);
+    }
+});
+
+bot.start();
