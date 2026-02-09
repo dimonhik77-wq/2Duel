@@ -1,782 +1,171 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Duels PVP Tactical</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg: #0a0a0b;
-            --card: rgba(28, 28, 32, 0.9);
-            --accent: #00f2ff;
-            --pink: #ff007a;
-            --text: #ffffff;
-        }
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Disc, Briefcase, LayoutGrid, Settings, Trophy } from 'lucide-react';
 
-        body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); margin: 0; overflow: hidden; }
+// --- КОМПОНЕНТ 1: ТЕРМИНАЛ (ЗАГРУЗКА) ---
+const Terminal = ({ onFinish }) => {
+  const lines = [
+    "> INITIALIZING KERNEL...",
+    "> CONNECTING TO FIREBASE...",
+    "> LOADING NEON_ASSETS...",
+    "> SYSTEM READY."
+  ];
 
-        /* --- PVP DUEL ARENA --- */
-        .duel-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 80vh;
-            gap: 40px;
-        }
-
-        .player-vs {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .avatar {
-            width: 70px; height: 70px;
-            border-radius: 50%;
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 15px var(--accent);
-        }
-
-        /* --- 3D COIN ANIMATION --- */
-        .coin {
-            width: 120px; height: 120px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 3s cubic-bezier(0.3, 2, 0.4, 0.8);
-        }
-        .coin div {
-            width: 100%; height: 100%;
-            position: absolute;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 40px; backface-visibility: hidden;
-            border: 4px solid #ffd700;
-            background: radial-gradient(circle, #fcf09f, #ccac00);
-        }
-        .heads { transform: rotateY(0deg); }
-        .tails { transform: rotateY(180deg); }
-
-        /* --- REVOLVER ANIMATION --- */
-        .revolver {
-            width: 150px; height: 150px;
-            background: url('https://cdn-icons-png.flaticon.com/512/575/575402.png') no-repeat center;
-            background-size: contain;
-            transition: transform 0.5s;
-        }
-        .revolver.spin { animation: rotateDrum 1s infinite linear; }
-        @keyframes rotateDrum { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        /* --- KNB HANDS --- */
-        .knb-arena { display: flex; gap: 100px; font-size: 80px; }
-        .hand { transition: transform 0.5s; }
-        .hand.shake { animation: shakeHand 0.5s 3; }
-        @keyframes shakeHand { 
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-30px); }
-        }
-
-        /* --- BOTTOM NAV --- */
-        .nav {
-            position: fixed; bottom: 0; width: 100%; height: 70px;
-            display: flex; justify-content: space-around; background: #111;
-            align-items: center; border-top: 1px solid #222;
-        }
-        .active-tab { color: var(--accent); }
-    </style>
-</head>
-<body>
-
-<div id="boot-screen" style="position:fixed; inset:0; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center;">
-    <div style="color:var(--accent); font-size:24px; letter-spacing:5px;" id="loader-text">CONNECTING...</div>
-</div>
-
-<div id="main-ui" style="display:none;">
-    <header style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:var(--accent)">2DUELS PVP</span>
-        <span id="balance">1000 Stars</span>
-    </header>
-
-    <div id="game-zone" class="duel-container">
-        <div class="player-vs">
-            <div class="player">
-                <div class="avatar"></div>
-                <div style="font-size:12px; text-align:center;">Ты</div>
-            </div>
-            <div style="color:var(--pink)">VS</div>
-            <div class="player">
-                <div class="avatar" style="border-color:var(--pink); box-shadow: 0 0 15px var(--pink);"></div>
-                <div style="font-size:12px; text-align:center;">Оппонент</div>
-            </div>
-        </div>
-        
-        <div class="coin" id="coin">
-            <div class="heads">🪙</div>
-            <div class="tails">💰</div>
-        </div>
-        
-        <div id="controls" style="display:flex; gap:15px;">
-            <button onclick="playAction('heads')" style="padding:15px 30px; border-radius:10px; border:none; background:var(--accent); font-weight:bold;">ОРЕЛ</button>
-            <button onclick="playAction('tails')" style="padding:15px 30px; border-radius:10px; border:none; background:var(--pink); font-weight:bold;">РЕШКА</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Скрытие загрузки через 2 секунды
-    setTimeout(() => {
-        document.getElementById('boot-screen').style.display = 'none';
-        document.getElementById('main-ui').style.display = 'block';
-    }, 2000);
-</script>
-// --- CONFIG ---
-const firebaseConfig = {
-    apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-    databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+  return (
+    <motion.div 
+      exit={{ opacity: 0, scale: 1.1 }}
+      className="fixed inset-0 bg-[#0f1014] z-50 flex flex-col justify-center p-8 font-mono text-[#00ff41]"
+    >
+      <div className="max-w-md mx-auto w-full">
+        {lines.map((line, i) => (
+          <motion.p 
+            key={i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.5 }}
+            className="mb-2 text-sm md:text-base"
+          >
+            {line}
+          </motion.p>
+        ))}
+        <motion.button 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.2 }}
+          onClick={onFinish}
+          className="mt-8 border border-[#00ff41] py-3 px-6 hover:bg-[#00ff41]/10 active:scale-95 transition-all w-full uppercase tracking-widest"
+        >
+          [ ENTER_ARENA ]
+        </motion.button>
+      </div>
+    </motion.div>
+  );
 };
 
-// Инициализация (убедись, что firebase подключен в head через CDN)
-// const db = firebase.database(); 
-
-let currentDuelId = null;
-let mySide = null; // 'player1' или 'player2'
-
-// --- ЛОГИКА ОРЕЛ И РЕШКА PVP ---
-function startCoinFlipPVP(duelId) {
-    const coin = document.getElementById('coin');
-    const controls = document.getElementById('controls');
-    
-    // Эмуляция получения данных от оппонента через Firebase
-    console.log("Ожидание выбора оппонента в дуэли:", duelId);
-    
-    window.playAction = function(side) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        controls.style.display = 'none'; // Убираем кнопки после выбора
-        
-        // Тут отправляем выбор в Firebase: db.ref('duels/' + duelId).update({ p1_choice: side });
-        
-        // Анимация вращения (имитация результата)
-        const result = Math.random() > 0.5 ? 'heads' : 'tails';
-        const extraSpins = 1800; // 5 полных оборотов
-        const finalDeg = result === 'heads' ? extraSpins : extraSpins + 180;
-        
-        coin.style.transform = `rotateY(${finalDeg}deg)`;
-        
-        setTimeout(() => {
-            alert(result === side ? "ТЫ ВЫИГРАЛ!" : "ТЫ ПРОИГРАЛ!");
-            location.reload(); // Сброс для новой игры
-        }, 3500);
-    };
-}
-
-// --- ЛОГИКА РУССКАЯ РУЛЕТКА PVP ---
-function initRussianRoulette() {
-    const gameZone = document.getElementById('game-zone');
-    gameZone.innerHTML = `
-        <div class="player-vs">
-            <div id="p1-status">Твой ход</div>
-            <div class="revolver" id="drum"></div>
-            <div id="p2-status">Ждет...</div>
-        </div>
-        <button id="trigger-btn" onclick="pullTrigger()" style="padding:20px; background:var(--pink); border:none; border-radius:50%; width:100px; height:100px; font-weight:bold; color:#fff; box-shadow: 0 0 20px var(--pink);">ОГОНЬ</button>
-    `;
-
-    let cylinder = [0, 0, 0, 0, 0, 1]; // 1 - пуля
-    cylinder = cylinder.sort(() => Math.random() - 0.5);
-    let currentStep = 0;
-
-    window.pullTrigger = function() {
-        const drum = document.getElementById('drum');
-        drum.style.transform = 'scale(1.2)';
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
-
-        setTimeout(() => {
-            drum.style.transform = 'scale(1)';
-            if (cylinder[currentStep] === 1) {
-                drum.style.filter = 'hue-rotate(90deg) brightness(0.5)';
-                alert("БАБАХ! Ты проиграл.");
-                location.reload();
-            } else {
-                alert("КЛИК. Тебе повезло. Ход оппонента...");
-                currentStep++;
-                // Тут через Firebase передаем ход: db.ref('duels/id').update({ turn: 'p2' });
-            }
-        }, 300);
-    };
-}
-
-// --- КНБ PVP (ОДНОВРЕМЕННО) ---
-function initKNB() {
-    const gameZone = document.getElementById('game-zone');
-    gameZone.innerHTML = `
-        <div class="knb-arena">
-            <div id="my-hand" class="hand">✊</div>
-            <div id="opp-hand" class="hand">✊</div>
-        </div>
-        <div id="knb-controls" style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="knbChoice('✊')">✊</button>
-            <button onclick="knbChoice('✋')">✋</button>
-            <button onclick="knbChoice('✌️')">✌️</button>
-        </div>
-    `;
-
-    window.knbChoice = function(choice) {
-        document.getElementById('my-hand').classList.add('shake');
-        document.getElementById('opp-hand').classList.add('shake');
-        document.getElementById('knb-controls').style.display = 'none';
-
-        setTimeout(() => {
-            document.getElementById('my-hand').classList.remove('shake');
-            document.getElementById('opp-hand').classList.remove('shake');
-            document.getElementById('my-hand').innerText = choice;
-            
-            // Имитация хода оппонента
-            const hands = ['✊', '✋', '✌️'];
-            const oppChoice = hands[Math.floor(Math.random() * 3)];
-            document.getElementById('opp-hand').innerText = oppChoice;
-            
-            // Логика победы...
-        }, 1500);
-    };
-}
-// --- HTML СТРУКТУРА ПРОФИЛЯ ---
-const profileContent = `
-<div id="screen-profile" class="screen">
-    <div style="text-align:center; margin-bottom:25px;">
-        <div style="position:relative; width:100px; height:100px; margin:0 auto 15px;">
-            <div id="avatar-glow" style="position:absolute; inset:-5px; border-radius:50%; background:linear-gradient(45deg, var(--accent), var(--pink)); filter:blur(10px); opacity:0.6;"></div>
-            <img src="https://via.placeholder.com/100" id="main-avatar" style="position:relative; width:100%; height:100%; border-radius:50%; border:3px solid var(--bg); object-fit:cover;">
-        </div>
-        <h2 id="p-username" style="font-size:24px; margin-bottom:5px;">@operator_2d</h2>
-        <p id="p-rank" style="font-size:12px; color:var(--accent); letter-spacing:2px;">RANK: NOVICE</p>
+// --- КОМПОНЕНТ 2: ЭКРАН ИНВЕНТАРЯ (ТВОЙ GOLD DEAGLE) ---
+const Inventory = () => (
+  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <h2 className="text-2xl font-black italic tracking-tighter">INVENTORY</h2>
+    <div className="relative group overflow-hidden rounded-2xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-500/20 to-transparent p-4 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+      <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,1)]" />
+      <div className="flex justify-between items-start mb-4">
+        <span className="bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded">LEGENDARY</span>
+        <span className="text-yellow-500/50 text-xs">#001</span>
+      </div>
+      <div className="py-8 flex justify-center relative">
+        <div className="absolute inset-0 bg-yellow-500/10 blur-3xl rounded-full" />
+        <img src="https://img.icons8.com/isometric/512/revolver.png" className="w-32 relative z-10 brightness-125 sepia-[.5] hue-rotate-[10deg]" alt="gold deagle" />
+      </div>
+      <p className="text-center font-bold text-lg tracking-tight">GOLD DEAGLE</p>
+      <p className="text-center text-[10px] text-gray-500 uppercase tracking-widest mt-1">Neon Glow Edition</p>
     </div>
+  </motion.div>
+);
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-        <div class="stat-mini-card" style="background:var(--card); padding:15px; border-radius:15px; text-align:center;">
-            <p style="font-size:10px; color:var(--dim);">ДУЭЛЕЙ</p>
-            <h4 id="stat-total">0</h4>
-        </div>
-        <div class="stat-mini-card" style="background:var(--card); padding:15px; border-radius:15px; text-align:center;">
-            <p style="font-size:10px; color:var(--dim);">WIN RATE</p>
-            <h4 id="stat-wr" style="color:#44ff44;">0%</h4>
-        </div>
-    </div>
+// --- ГЛАВНЫЙ КОМПОНЕНТ ---
+export default function App() {
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('lobby');
 
-    <h3 style="font-size:16px; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
-        <span style="font-size:20px;">🎁</span> МОЙ ИНВЕНТАРЬ
-    </h3>
-    <div id="inventory-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:30px;">
-        <div class="inv-slot-empty"></div>
-        <div class="inv-slot-empty"></div>
-        <div class="inv-slot-empty"></div>
-    </div>
+  return (
+    <div className="min-h-screen bg-[#0f1014] text-white font-sans selection:bg-yellow-500/30">
+      <AnimatePresence>
+        {loading && <Terminal onFinish={() => setLoading(false)} />}
+      </AnimatePresence>
 
-    <div class="menu-list">
-        <div class="menu-item"><span>📜</span> Задания <span class="badge">HOT</span></div>
-        <div class="menu-item"><span>💎</span> Рефералы</div>
-        <div class="menu-item"><span>⚙️</span> Настройки</div>
-    </div>
-</div>
-`;
-
-document.body.insertAdjacentHTML('beforeend', profileContent);
-
-// --- СТИЛИ ДЛЯ ИНВЕНТАРЯ ---
-const invStyles = `
-    .inv-slot-empty {
-        aspect-ratio: 1/1;
-        background: rgba(255,255,255,0.02);
-        border: 1px dashed rgba(255,255,255,0.1);
-        border-radius: 12px;
-    }
-    .nft-card {
-        aspect-ratio: 1/1;
-        background: var(--card);
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        border: 1px solid rgba(255,255,255,0.05);
-        position: relative;
-        overflow: hidden;
-    }
-    .nft-rarity {
-        position: absolute;
-        bottom: 0; width: 100%; height: 4px;
-    }
-    .rarity-legendary { background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
-    .rarity-epic { background: #a200ff; }
-    .rarity-rare { background: #007aff; }
-
-    .menu-item {
-        background: var(--card);
-        padding: 16px;
-        border-radius: 15px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        font-size: 14px;
-        border: 1px solid rgba(255,255,255,0.03);
-    }
-    .badge {
-        background: var(--pink);
-        padding: 2px 8px;
-        border-radius: 8px;
-        font-size: 10px;
-        margin-left: auto;
-    }
-`;
-const sheet = document.createElement('style');
-sheet.innerText = invStyles;
-document.head.appendChild(sheet);
-
-// --- ЛОГИКА ЗАПОЛНЕНИЯ ИНВЕНТАРЯ ---
-function loadUserInventory() {
-    const grid = document.getElementById('inventory-grid');
-    const items = [
-        { icon: "🗡️", name: "Cyber Blade", rarity: "legendary" },
-        { icon: "🛡️", name: "Neon Shield", rarity: "rare" }
-    ];
-
-    if(items.length > 0) grid.innerHTML = ""; // Очистка пустых слотов
-
-    items.forEach(item => {
-        const card = `
-            <div class="nft-card" onclick="alert('${item.name}')">
-                ${item.icon}
-                <div class="nft-rarity rarity-${item.rarity}"></div>
+      {!loading && (
+        <div className="pb-32 p-6 max-w-lg mx-auto">
+          {/* HEADER */}
+          <header className="flex justify-between items-center mb-10">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-500 font-bold tracking-[0.2em]">PROJECT</span>
+              <h1 className="text-2xl font-black italic tracking-tighter text-white">2DUELS</h1>
             </div>
-        `;
-        grid.insertAdjacentHTML('beforeend', card);
-    });
-}
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-1.5 rounded-2xl">
+               <div className="flex items-center gap-1.5 px-2">
+                 <span className="text-yellow-500 text-xs">⭐</span>
+                 <span className="font-bold text-sm text-gray-200">1,250</span>
+               </div>
+               <div className="w-8 h-8 rounded-xl bg-yellow-500 flex items-center justify-center text-black">
+                 <Settings size={16} />
+               </div>
+            </div>
+          </header>
 
-// Запуск при загрузке
-setTimeout(loadUserInventory, 1000);
-// --- ЛОГИКА МАГАЗИНА (MARKET) ---
-const marketHTML = `
-<div id="screen-market" class="screen" style="display:none;">
-    <h2 style="margin-bottom:20px; font-size:22px;">МАРКЕТ СКИНОВ</h2>
-    
-    <div class="market-grid" style="display:grid; grid-template-columns:1fr; gap:15px;">
-        <div class="skin-card legendary" style="background:var(--card); border-radius:20px; padding:20px; border:1px solid #ffd700; position:relative; overflow:hidden;">
-            <div style="position:absolute; top:10px; right:10px; background:#ffd700; color:#000; font-size:10px; padding:2px 8px; border-radius:5px; font-weight:bold;">LEGENDARY</div>
-            
-            <div style="display:flex; align-items:center; gap:20px;">
-                <div style="font-size:45px; filter: drop-shadow(0 0 10px #ffd700);">🔫</div>
-                <div>
-                    <h3 style="color:#ffd700;">Gold Deagle</h3>
-                    <p style="font-size:11px; color:var(--dim);">Эксклюзив для Русской Рулетки</p>
+          {/* КОНТЕНТ В ЗАВИСИМОСТИ ОТ ВКЛАДКИ */}
+          <div className="min-h-[50vh]">
+            {activeTab === 'lobby' && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                <div className="bg-gradient-to-r from-yellow-500/20 to-transparent border-l-4 border-yellow-500 p-4 rounded-r-xl mb-6">
+                  <p className="text-[10px] uppercase tracking-widest font-bold opacity-50">Current Event</p>
+                  <h3 className="font-bold text-lg">DAILY ROULETTE x2 XP</h3>
                 </div>
-            </div>
-            
-            <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="font-size:18px;">⭐️</span>
-                    <span id="deagle-price" style="font-weight:bold; font-size:18px;">XTR</span> 
+                
+                {/* КАРТОЧКА ИГРЫ */}
+                <div className="relative overflow-hidden rounded-3xl bg-[#1a1b22] border border-white/5 p-6 group active:scale-[0.98] transition-transform">
+                   <div className="flex justify-between items-center relative z-10">
+                     <div>
+                       <h3 className="text-2xl font-black italic tracking-tighter">RUSSIAN<br/>ROULETTE</h3>
+                       <button className="mt-4 bg-white text-black font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter">Play PvP</button>
+                     </div>
+                     <img src="https://img.icons8.com/isometric/512/revolver.png" className="w-24 group-hover:rotate-12 transition-transform duration-500" alt="gun" />
+                   </div>
                 </div>
-                <button onclick="buySkin('Gold Deagle')" style="background:#ffd700; color:#000; border:none; padding:10px 25px; border-radius:12px; font-weight:bold; cursor:pointer;">КУПИТЬ</button>
-            </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'profile' && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
+                 <div className="w-24 h-24 bg-white/10 rounded-full mx-auto border-4 border-white/5 flex items-center justify-center">
+                   <User size={40} className="text-gray-500" />
+                 </div>
+                 <h2 className="text-2xl font-bold italic">PLAYER_01</h2>
+                 <div className="grid grid-cols-2 gap-3">
+                   <div className="bg-[#1a1b22] p-4 rounded-2xl border border-white/5">
+                     <p className="text-[10px] text-gray-500 uppercase">Wins</p>
+                     <p className="text-xl font-bold">128</p>
+                   </div>
+                   <div className="bg-[#1a1b22] p-4 rounded-2xl border border-white/5">
+                     <p className="text-[10px] text-gray-500 uppercase">Rank</p>
+                     <p className="text-xl font-bold text-yellow-500">GOLD II</p>
+                   </div>
+                 </div>
+               </motion.div>
+            )}
+
+            {activeTab === 'inventory' && <Inventory />}
+          </div>
+
+          {/* NAVIGATION BAR (ТВОЙ НАВБАР) */}
+          <nav className="fixed bottom-8 left-6 right-6 bg-[#1a1b22]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-4 flex justify-between items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <NavIcon active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={20}/>} label="User" />
+            <NavIcon active={activeTab === 'lobby'} onClick={() => setActiveTab('lobby')} icon={<LayoutGrid size={20}/>} label="Arena" />
+            
+            {/* Центровая кнопка Рулетки */}
+            <button 
+              onClick={() => setActiveTab('lobby')}
+              className="relative -mt-16 group"
+            >
+              <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="bg-yellow-500 p-5 rounded-[2rem] shadow-xl relative z-10">
+                <Disc size={28} className="text-black animate-[spin_4s_linear_infinite]" />
+              </div>
+            </button>
+
+            <NavIcon active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={<Briefcase size={20}/>} label="Items" />
+            <NavIcon active={false} icon={<Trophy size={20}/>} label="Ranks" />
+          </nav>
         </div>
+      )}
     </div>
-</div>
-`;
-
-// Инъекция маркета в документ
-document.body.insertAdjacentHTML('beforeend', marketHTML);
-
-// --- ЛОГИКА ПОКУПКИ ---
-function buySkin(skinName) {
-    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    
-    // Вызов Telegram Stars (платежка)
-    // Тут будет твой вызов API, когда цену поставишь
-    
-    alert(`Вы приобрели ${skinName}! Скин добавлен в инвентарь.`);
-    
-    // Добавляем в инвентарь (визуально для теста)
-    const invGrid = document.getElementById('inventory-grid');
-    if(invGrid) {
-        const newSkin = `
-            <div class="nft-card" style="border:1px solid #ffd700;">
-                🔫
-                <div class="nft-rarity rarity-legendary"></div>
-            </div>
-        `;
-        invGrid.insertAdjacentHTML('afterbegin', newSkin);
-    }
+  );
 }
 
-// Стили для карточки скина
-const marketStyle = document.createElement('style');
-marketStyle.innerText = `
-    .skin-card.legendary::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
-        animation: shine 3s infinite;
-    }
-    @keyframes shine {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-`;
-document.head.appendChild(marketStyle);
-// --- ИГРА ЧИПСЫ (МИНЫ) 1 на 1 ---
-function initChipsPVP() {
-    const gameZone = document.getElementById('game-zone');
-    gameZone.innerHTML = `
-        <div style="text-align:center; margin-bottom:15px;">ХОД: <span id="current-turn" style="color:var(--accent)">ТВОЙ</span></div>
-        <div id="mines-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; width:250px; margin:0 auto;">
-            ${Array(9).fill().map((_, i) => `<div class="mine-cell" onclick="openCell(${i})" id="cell-${i}">?</div>`).join('')}
-        </div>
-    `;
-
-    let mines = [Math.floor(Math.random() * 9)]; // Одна мина на поле 3х3
-
-    window.openCell = function(idx) {
-        const cell = document.getElementById(`cell-${idx}`);
-        if(cell.classList.contains('opened')) return;
-
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-        cell.classList.add('opened');
-
-        if(mines.includes(idx)) {
-            cell.innerHTML = "💥";
-            cell.style.background = var(--pink);
-            alert("БАБАХ! Ты проиграл чипсы.");
-            setTimeout(() => location.reload(), 2000);
-        } else {
-            cell.innerHTML = "💎";
-            cell.style.background = "#44ff4433";
-            cell.style.color = "#44ff44";
-            // Передача хода оппоненту через Firebase
-            document.getElementById('current-turn').innerText = "ОППОНЕНТ";
-        }
-    };
+function NavIcon({ icon, label, active, onClick }) {
+  return (
+    <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-yellow-500 scale-110' : 'text-gray-500 hover:text-white'}`}>
+      {icon}
+      <span className="text-[8px] font-black uppercase tracking-tighter">{label}</span>
+    </button>
+  );
 }
-
-// --- СТИЛИ ДЛЯ МИН ---
-const chipStyles = `
-    .mine-cell {
-        aspect-ratio: 1/1; background: var(--card); border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 20px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05);
-        cursor: pointer; transition: 0.3s;
-    }
-    .mine-cell.opened { cursor: default; border: none; }
-`;
-const s = document.createElement('style'); s.innerText = chipStyles; document.head.appendChild(s);
-
-// --- АНИМАЦИЯ ВХОДА (LOGO BOOT) ---
-function runFinalBoot() {
-    const loader = document.getElementById('boot-screen');
-    const txt = document.getElementById('loader-text');
-    
-    const messages = ["SYSTEM SCAN...", "PVP ENGINE ON...", "LOADED."];
-    let i = 0;
-    
-    const interval = setInterval(() => {
-        txt.innerText = messages[i];
-        i++;
-        if(i >= messages.length) {
-            clearInterval(interval);
-            loader.style.transition = "opacity 1s, transform 1s";
-            loader.style.opacity = "0";
-            loader.style.transform = "scale(1.2)";
-            setTimeout(() => {
-                loader.style.display = 'none';
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            }, 1000);
-        }
-    }, 1000);
-}
-
-// --- НАВИГАЦИЯ ---
-function setScreen(name) {
-    document.querySelectorAll('.screen').forEach(scr => scr.style.display = 'none');
-    const target = document.getElementById('screen-' + name) || document.getElementById(name);
-    if(target) target.style.display = 'block';
-    
-    // Подсветка кнопок
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
-    event.currentTarget.classList.add('active-tab');
-}
-
-// ФИНАЛЬНЫЙ СТАРТ
-runFinalBoot();
-// initChipsPVP(); // Разкомментируй, если хочешь сразу мины 
-    <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Duels Reconstruction</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg: #0a0a0b;
-            --panel: rgba(25, 25, 28, 0.95);
-            --accent: #00f2ff;
-            --pink: #ff007a;
-            --gold: #ffd700;
-            --text: #ffffff;
-            --dim: #88888b;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
-
-        /* --- UI КАРКАС --- */
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; background: var(--bg); }
-        .screen { display: none; padding: 70px 20px 100px; height: 100vh; overflow-y: auto; }
-        .screen.active { display: block; }
-
-        /* --- ГЕЙМ-ЗОНА --- */
-        .game-card { background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .btn-play { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; width: 100%; margin-top: 10px; }
-
-        /* --- РУЛЕТКА CANVAS --- */
-        .wheel-box { position: relative; width: 260px; height: 260px; margin: 0 auto 20px; }
-        #wheelCanvas { width: 100%; height: 100%; transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); }
-        .wheel-arrow { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 20px; height: 30px; background: #fff; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; }
-
-        /* --- ИНВЕНТАРЬ И ПРОФИЛЬ --- */
-        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .inv-item { aspect-ratio: 1/1; background: var(--panel); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
-        .rarity-gold { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
-
-        /* --- НАВИГАЦИЯ --- */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #111; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
-        .nav-item { color: var(--dim); font-size: 11px; text-align: center; }
-        .nav-item.active { color: var(--accent); }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
-
-        /* --- АНИМАЦИИ --- */
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .animate-win { animation: bounce 0.5s ease 3; }
-    </style>
-</head>
-<body>
-
-<header>
-    <div id="lang-toggle" onclick="toggleLang()">🇷🇺 RU</div>
-    <div style="color: var(--accent); font-weight: bold;">2DUELS</div>
-    <div id="balance-header">0 ⭐️</div>
-</header>
-
-<div id="scr-games" class="screen active">
-    <div class="wheel-box">
-        <div class="wheel-arrow"></div>
-        <canvas id="wheelCanvas" width="500" height="500"></canvas>
-    </div>
-    
-    <div class="game-card">
-        <h3 id="t-roulette">Русская Рулетка</h3>
-        <p id="t-roulette-desc">PVP Дуэль на выживание</p>
-        <button class="btn-play" onclick="startRoulette()">ИГРАТЬ 1 VS 1</button>
-    </div>
-
-    <div class="game-card">
-        <h3 id="t-knb">КНБ Дуэль</h3>
-        <button class="btn-play" onclick="alert('Ожидание игрока...')">ВЫЗВАТЬ</button>
-    </div>
-</div>
-
-<div id="scr-profile" class="screen">
-    <div style="text-align: center; margin-bottom: 20px;">
-        <div style="width: 80px; height: 80px; background: #333; border-radius: 50%; margin: 0 auto 10px; border: 2px solid var(--accent);"></div>
-        <h2 id="u-name">Player</h2>
-    </div>
-
-    <h3 id="t-inv">Инвентарь</h3>
-    <div class="inv-grid" id="inventory-container">
-        </div>
-
-    <div class="game-card" style="margin-top: 20px;">
-        <h3 id="t-market">Маркет</h3>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-            <span>🔫 Gold Deagle</span>
-            <button onclick="buyGoldDeagle()" id="btn-buy" style="background:var(--gold); border:none; padding:5px 15px; border-radius:5px; font-weight:bold;">100 ⭐️</button>
-        </div>
-    </div>
-</div>
-
-<nav class="nav-bar">
-    <div class="nav-item active" onclick="showScr('games')"><span class="nav-icon">🎮</span>Игры</div>
-    <div class="nav-item" onclick="showScr('profile')"><span class="nav-icon">👤</span>Профиль</div>
-</nav>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    let state = {
-        lang: 'RU',
-        hasDeagle: false,
-        balance: 500
-    };
-
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Duels Official</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg: #0a0a0b;
-            --card: #1c1c1f;
-            --accent: #00f2ff;
-            --pink: #ff007a;
-            --gold: #ffd700;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: white; overflow: hidden; }
-
-        /* --- NAVIGATION --- */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; height: 75px;
-            background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid #222; z-index: 1000;
-        }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #555; transition: 0.3s; }
-        .nav-item.active { color: white; }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; }
-
-        /* --- SCREENS --- */
-        .screen { display: none; height: 100vh; padding: 20px 20px 100px; overflow-y: auto; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- LOBBY CARDS (КАК НА СКРИНЕ) --- */
-        .lobby-card {
-            background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 15px;
-            position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .online-tag { position: absolute; top: 15px; left: 15px; font-size: 10px; color: #44ff44; display: flex; align-items: center; gap: 4px; }
-        .online-tag::before { content: ""; width: 5px; height: 5px; background: #44ff44; border-radius: 50%; }
-        .game-title { font-size: 22px; font-weight: bold; margin-top: 10px; }
-        .game-desc { font-size: 12px; color: #888; margin-top: 5px; }
-
-        /* --- 3D PVP COIN ANIMATION (ФИКС) --- */
-        .coin-box { perspective: 1000px; width: 120px; height: 120px; margin: 40px auto; }
-        .coin {
-            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
-            transition: transform 3.5s cubic-bezier(0.2, 0, 0.1, 1);
-        }
-        .coin-side {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 50px;
-            backface-visibility: hidden; border: 6px solid var(--gold);
-        }
-        .heads { background: radial-gradient(circle, #fcf09f, #ccac00); }
-        .tails { background: radial-gradient(circle, #fcf09f, #ccac00); transform: rotateY(180deg); }
-
-        /* --- HEADER --- */
-        header { display: flex; justify-content: center; padding: 15px; font-size: 12px; color: #44ff44; }
-    </style>
-</head>
-<body>
-
-<header>● 234 онлайн</header>
-
-<div id="scr-solo" class="screen active">
-    <div class="lobby-card" onclick="openGame('lucky')">
-        <div class="online-tag">13 онлайн</div>
-        <div>
-            <div class="game-title">Lucky</div>
-            <div class="game-desc">Приумножай свои гифты</div>
-        </div>
-        <div style="font-size: 40px;">🎲</div>
-    </div>
-    
-    <div class="lobby-card" onclick="openGame('mono')">
-        <div class="online-tag">6 онлайн</div>
-        <div>
-            <div class="game-title">Моно</div>
-            <div class="game-desc">Выбери гифт и выиграй его</div>
-        </div>
-        <div style="font-size: 40px;">🟣</div>
-    </div>
-
-    <div class="lobby-card" onclick="openGame('roll')">
-        <div class="online-tag">10 онлайн</div>
-        <div>
-            <div class="game-title">Ролл</div>
-            <div class="game-desc">Крути чтобы получить подарок</div>
-        </div>
-        <div style="font-size: 40px;">🐸</div>
-    </div>
-</div>
-
-<div id="scr-pvp" class="screen">
-    <div style="text-align: center; margin-top: 50px;">
-        <p style="color: var(--accent);">DUEL 1 VS 1</p>
-        <div class="coin-box">
-            <div class="coin" id="coin-obj">
-                <div class="coin-side heads">🪙</div>
-                <div class="coin-side tails">💰</div>
-            </div>
-        </div>
-        <div id="duel-controls" style="display: flex; gap: 15px; justify-content: center;">
-            <button onclick="flip('heads')" style="background: var(--accent); border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">ОРЕЛ</button>
-            <button onclick="flip('tails')" style="background: var(--pink); border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">РЕШКА</button>
-        </div>
-        <p id="demo-msg" style="margin-top:20px; font-size:12px; color: #555;">DEMO MODE: ACTIVE</p>
-    </div>
-</div>
-
-<nav class="bottom-nav">
-    <div class="nav-item" onclick="switchTab('pvp', this)"><span class="nav-icon">⚔️</span>ПвП</div>
-    <div class="nav-item active" onclick="switchTab('solo', this)"><span class="nav-icon">🎯</span>Соло</div>
-    <div class="nav-item"><span class="nav-icon">🎁</span>Розыгрыши</div>
-    <div class="nav-item"><span class="nav-icon">👤</span>Профиль</div>
-</nav>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    function switchTab(id, el) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('scr-' + id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        tg.HapticFeedback.impactOccurred('light');
-    }
-
-    function openGame(name) {
-        alert("Запуск игры: " + name + "\n(В демо-версии доступны только Дуэли)");
-    }
-
-    function flip(choice) {
-        const coin = document.getElementById('coin-obj');
-        const res = Math.random() > 0.5 ? 'heads' : 'tails';
-        const deg = res === 'heads' ? 1800 : 1980; // 5 полных оборотов + результат
-        
-        tg.HapticFeedback.impactOccurred('medium');
-        coin.style.transform = `rotateY(${deg}deg)`;
-
-        setTimeout(() => {
-            tg.HapticFeedback.notificationOccurred(res === choice ? 'success' : 'error');
-            alert(res === choice ? "ПОБЕДА (DEMO)!" : "ПРОИГРЫШ (DEMO)!");
-            coin.style.transition = 'none';
-            coin.style.transform = 'rotateY(0deg)';
-            setTimeout(() => coin.style.transition = 'transform 3.5s cubic-bezier(0.2, 0, 0.1, 1)', 50);
-        }, 4000);
-    }
-</script>
-</body>
-</html>
-
