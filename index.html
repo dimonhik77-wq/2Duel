@@ -624,70 +624,158 @@ runFinalBoot();
         balance: 500
     };
 
-    // --- ПОЧИНЕННАЯ ЛОГИКА РУЛЕТКИ ---
-    const canvas = document.getElementById('wheelCanvas');
-    const ctx = canvas.getContext('2d');
-    function drawWheel() {
-        const colors = ['#ff007a', '#00f2ff', '#7a00ff', '#ffcc00'];
-        let angle = 0;
-        for(let i=0; i<8; i++) {
-            ctx.beginPath();
-            ctx.moveTo(250, 250);
-            ctx.arc(250, 250, 240, angle, angle + Math.PI/4);
-            ctx.fillStyle = colors[i % colors.length];
-            ctx.fill();
-            ctx.stroke();
-            angle += Math.PI/4;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2Duels Official</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --card: #1c1c1f;
+            --accent: #00f2ff;
+            --pink: #ff007a;
+            --gold: #ffd700;
         }
-    }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: white; overflow: hidden; }
 
-    function startRoulette() {
-        tg.HapticFeedback.impactOccurred('medium');
-        const deg = 1800 + Math.random() * 360;
-        canvas.style.transform = `rotate(${deg}deg)`;
-        setTimeout(() => {
-            alert(state.hasDeagle ? "Золотой Дигл принес победу!" : "Вы проиграли в рулетку!");
-        }, 4500);
-    }
-
-    // --- ПОЧИНЕННЫЙ ИНВЕНТАРЬ ---
-    function buyGoldDeagle() {
-        state.hasDeagle = true;
-        tg.HapticFeedback.notificationOccurred('success');
-        updateInv();
-        document.getElementById('btn-buy').innerText = "КУПЛЕНО";
-        alert("Скин Gold Deagle экипирован!");
-    }
-
-    function updateInv() {
-        const container = document.getElementById('inventory-container');
-        container.innerHTML = '';
-        if(state.hasDeagle) {
-            container.innerHTML = `<div class="inv-item rarity-gold">🔫</div>`;
+        /* --- NAVIGATION --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 75px;
+            background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #222; z-index: 1000;
         }
-        for(let i=0; i<(state.hasDeagle ? 5 : 6); i++) {
-            container.innerHTML += `<div class="inv-item"></div>`;
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #555; transition: 0.3s; }
+        .nav-item.active { color: white; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+
+        /* --- SCREENS --- */
+        .screen { display: none; height: 100vh; padding: 20px 20px 100px; overflow-y: auto; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- LOBBY CARDS (КАК НА СКРИНЕ) --- */
+        .lobby-card {
+            background: var(--card); border-radius: 24px; padding: 25px; margin-bottom: 15px;
+            position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
         }
-    }
+        .online-tag { position: absolute; top: 15px; left: 15px; font-size: 10px; color: #44ff44; display: flex; align-items: center; gap: 4px; }
+        .online-tag::before { content: ""; width: 5px; height: 5px; background: #44ff44; border-radius: 50%; }
+        .game-title { font-size: 22px; font-weight: bold; margin-top: 10px; }
+        .game-desc { font-size: 12px; color: #888; margin-top: 5px; }
 
-    // --- НАСТРОЙКИ ЯЗЫКА ---
-    function toggleLang() {
-        state.lang = state.lang === 'RU' ? 'EN' : 'RU';
-        document.getElementById('lang-toggle').innerText = state.lang === 'RU' ? '🇷🇺 RU' : '🇺🇸 EN';
-        // Тут можно добавить смену всех id="t-..." текстов
-    }
+        /* --- 3D PVP COIN ANIMATION (ФИКС) --- */
+        .coin-box { perspective: 1000px; width: 120px; height: 120px; margin: 40px auto; }
+        .coin {
+            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+            transition: transform 3.5s cubic-bezier(0.2, 0, 0.1, 1);
+        }
+        .coin-side {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 50px;
+            backface-visibility: hidden; border: 6px solid var(--gold);
+        }
+        .heads { background: radial-gradient(circle, #fcf09f, #ccac00); }
+        .tails { background: radial-gradient(circle, #fcf09f, #ccac00); transform: rotateY(180deg); }
 
-    function showScr(id) {
+        /* --- HEADER --- */
+        header { display: flex; justify-content: center; padding: 15px; font-size: 12px; color: #44ff44; }
+    </style>
+</head>
+<body>
+
+<header>● 234 онлайн</header>
+
+<div id="scr-solo" class="screen active">
+    <div class="lobby-card" onclick="openGame('lucky')">
+        <div class="online-tag">13 онлайн</div>
+        <div>
+            <div class="game-title">Lucky</div>
+            <div class="game-desc">Приумножай свои гифты</div>
+        </div>
+        <div style="font-size: 40px;">🎲</div>
+    </div>
+    
+    <div class="lobby-card" onclick="openGame('mono')">
+        <div class="online-tag">6 онлайн</div>
+        <div>
+            <div class="game-title">Моно</div>
+            <div class="game-desc">Выбери гифт и выиграй его</div>
+        </div>
+        <div style="font-size: 40px;">🟣</div>
+    </div>
+
+    <div class="lobby-card" onclick="openGame('roll')">
+        <div class="online-tag">10 онлайн</div>
+        <div>
+            <div class="game-title">Ролл</div>
+            <div class="game-desc">Крути чтобы получить подарок</div>
+        </div>
+        <div style="font-size: 40px;">🐸</div>
+    </div>
+</div>
+
+<div id="scr-pvp" class="screen">
+    <div style="text-align: center; margin-top: 50px;">
+        <p style="color: var(--accent);">DUEL 1 VS 1</p>
+        <div class="coin-box">
+            <div class="coin" id="coin-obj">
+                <div class="coin-side heads">🪙</div>
+                <div class="coin-side tails">💰</div>
+            </div>
+        </div>
+        <div id="duel-controls" style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="flip('heads')" style="background: var(--accent); border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">ОРЕЛ</button>
+            <button onclick="flip('tails')" style="background: var(--pink); border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">РЕШКА</button>
+        </div>
+        <p id="demo-msg" style="margin-top:20px; font-size:12px; color: #555;">DEMO MODE: ACTIVE</p>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item" onclick="switchTab('pvp', this)"><span class="nav-icon">⚔️</span>ПвП</div>
+    <div class="nav-item active" onclick="switchTab('solo', this)"><span class="nav-icon">🎯</span>Соло</div>
+    <div class="nav-item"><span class="nav-icon">🎁</span>Розыгрыши</div>
+    <div class="nav-item"><span class="nav-icon">👤</span>Профиль</div>
+</nav>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function switchTab(id, el) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('scr-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        el.classList.add('active');
+        tg.HapticFeedback.impactOccurred('light');
     }
 
-    window.onload = () => {
-        drawWheel();
-        updateInv();
-    };
+    function openGame(name) {
+        alert("Запуск игры: " + name + "\n(В демо-версии доступны только Дуэли)");
+    }
+
+    function flip(choice) {
+        const coin = document.getElementById('coin-obj');
+        const res = Math.random() > 0.5 ? 'heads' : 'tails';
+        const deg = res === 'heads' ? 1800 : 1980; // 5 полных оборотов + результат
+        
+        tg.HapticFeedback.impactOccurred('medium');
+        coin.style.transform = `rotateY(${deg}deg)`;
+
+        setTimeout(() => {
+            tg.HapticFeedback.notificationOccurred(res === choice ? 'success' : 'error');
+            alert(res === choice ? "ПОБЕДА (DEMO)!" : "ПРОИГРЫШ (DEMO)!");
+            coin.style.transition = 'none';
+            coin.style.transform = 'rotateY(0deg)';
+            setTimeout(() => coin.style.transition = 'transform 3.5s cubic-bezier(0.2, 0, 0.1, 1)', 50);
+        }, 4000);
+    }
 </script>
 </body>
 </html>
