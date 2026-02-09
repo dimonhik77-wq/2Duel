@@ -3,179 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2DUELS ULTIMATE</title>
+    <title>2DUELS PIXEL OS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00f2ff; --red: #ff0044; --bg: #050508; --panel: rgba(255,255,255,0.03); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; overflow: hidden; height: 100vh; }
+        :root { --green: #00ff41; --red: #ff0000; --bg: #000; --pixel: 4px; --gold: #ffd700; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; image-rendering: pixelated; }
+        body { background: var(--bg); color: #fff; font-family: 'Press Start 2P', cursive; margin: 0; overflow: hidden; height: 100vh; font-size: 8px; }
+        
+        /* HEADER */
+        .header { padding: 15px; border-bottom: var(--pixel) solid #222; display: flex; justify-content: space-between; align-items: center; background: #080808; }
+        .stars-bal { color: var(--gold); }
 
-        /* PRELOADER */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .loading-logo { font-family: 'Orbitron'; font-size: 32px; letter-spacing: 8px; color: var(--accent); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        /* MENU */
+        .menu { padding: 15px; display: grid; grid-template-columns: 1fr; gap: 10px; overflow-y: auto; height: calc(100vh - 120px); }
+        .card { background: #111; border: var(--pixel) solid #333; padding: 15px; position: relative; transition: 0.1s; }
+        .card:active { border-color: var(--green); transform: scale(0.98); }
+        .card h3 { margin: 0; font-size: 10px; color: var(--green); }
+        .card p { font-size: 6px; color: #666; margin: 8px 0 0; }
 
-        /* MAIN APP */
-        .app-content { display: none; opacity: 0; transition: 0.5s; height: 100vh; flex-direction: column; }
-        .header { padding: 15px 20px; border-bottom: 1px solid rgba(0,242,255,0.1); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); }
-        .avatar { width: 35px; height: 35px; border: 1px solid var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; color: var(--accent); font-size: 12px; }
+        /* OVERLAYS */
+        .screen { display: none; position: fixed; inset: 0; background: #000; z-index: 100; flex-direction: column; align-items: center; padding: 20px; }
+        .top-nav { width: 100%; display: flex; justify-content: space-between; margin-bottom: 30px; color: var(--red); }
 
-        /* MENU GRID */
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        .game-card { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 10px; text-align: center; transition: 0.2s; }
-        .game-card:active { transform: scale(0.95); border-color: var(--accent); }
-        .game-card span { font-size: 24px; display: block; margin-bottom: 8px; }
-        .game-card h3 { font-family: 'Orbitron'; font-size: 10px; letter-spacing: 1px; margin: 0; color: #aaa; }
+        /* GAMES VISUALS */
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 240px; }
+        .tile { aspect-ratio: 1; background: #222; border: var(--pixel) solid #444; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .tile.selected { border-color: var(--red); background: #300; }
+        .tile.open { border-color: var(--green); background: #030; }
 
-        /* GAME OVERLAYS */
-        .game-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 100; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-back { position: absolute; top: 20px; right: 20px; font-size: 24px; color: #444; z-index: 110; }
-        .action-btn { background: var(--panel); border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 12px; margin: 10px; font-family: 'Orbitron'; font-size: 12px; width: 80%; transition: 0.2s; }
-        .action-btn:active { background: var(--accent); color: #000; }
+        .gun { width: 100px; height: 50px; background: #777; position: relative; margin: 40px 0; border: 4px solid #444; }
+        .gun::after { content: ''; position: absolute; left: -20px; bottom: -30px; width: 40px; height: 50px; background: #555; }
+        .flash { position: fixed; inset: 0; background: white; display: none; z-index: 200; }
 
-        /* COIN FLIP ANIMATION */
-        .coin { width: 100px; height: 100px; background: var(--panel); border: 4px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 30px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .coin.flip { transform: rotateY(720deg) scale(1.2); }
+        .coin { width: 60px; height: 60px; background: var(--gold); border: 4px solid #b8860b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #b8860b; transition: 0.1s; }
+        .flipping { animation: flip 0.2s infinite; }
+        @keyframes flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
 
-        /* ROULETTE STYLES */
-        .cylinder { width: 150px; height: 150px; border: 2px dashed var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; transition: 0.5s; }
-        .cylinder.spin { transform: rotate(360deg); }
-
-        /* MINES GRID */
-        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; margin: 20px 0; }
-        .mine-cell { aspect-ratio: 1; background: var(--panel); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .mine-cell.open { background: #1a1a2e; border-color: var(--accent); }
+        /* BOTTOM NAV */
+        .bottom-bar { position: fixed; bottom: 0; width: 100%; height: 60px; border-top: var(--pixel) solid #222; display: flex; justify-content: space-around; align-items: center; background: #080808; }
+        .nav-item { color: #444; font-size: 6px; }
+        .nav-item.active { color: var(--green); }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="loading-logo">2DUELS</div>
-        <div style="font-size: 8px; color: #444; margin-top: 15px; letter-spacing: 3px;">INITIALIZING CORE...</div>
+<div id="lobby">
+    <div class="header">
+        <div>ID:<span id="uid">0000</span></div>
+        <div class="stars-bal">⭐<span id="bal">1250</span></div>
     </div>
-
-    <div class="app-content" id="app">
-        <div class="header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="avatar" id="avatar">?</div>
-                <div>
-                    <div id="ip" style="font-size: 8px; color: var(--accent);">IP: 127.0.0.1</div>
-                    <div id="nick" style="font-family: 'Orbitron'; font-size: 13px;">PLAYER</div>
-                </div>
-            </div>
-            <div style="text-align: right; font-size: 8px; color: #444;">ID: <span id="uid">---</span></div>
-        </div>
-
-        <div class="menu-grid">
-            <div class="game-card" onclick="openGame('mines')"><span>💣</span><h3>MINES</h3></div>
-            <div class="game-card" onclick="openGame('rps')"><span>✌️</span><h3>PVP RPS</h3></div>
-            <div class="game-card" onclick="openGame('coin')"><span>🪙</span><h3>COIN FLIP</h3></div>
-            <div class="game-card" onclick="openGame('roulette')"><span>🔫</span><h3>ROULETTE</h3></div>
-        </div>
+    <div class="menu">
+        <div class="card" onclick="openGame('mines')"><h3>MINES 3x3</h3><p>PVP: SET 3 TRAPS & SURVIVE</p></div>
+        <div class="card" onclick="openGame('roulette')"><h3>ROULETTE</h3><p>1 BULLET. 6 CHAMBERS. FEEL LUCKY?</p></div>
+        <div class="card" onclick="openGame('coin')"><h3>COIN FLIP</h3><p>DOUBLE YOUR STARS OR LOSE ALL</p></div>
+        <div class="card" onclick="openGame('rps')"><h3>PVP DUEL (RPS)</h3><p>ROCK, PAPER, SCISSORS BATTLE</p></div>
     </div>
+</div>
 
-    <div id="mines-screen" class="game-overlay"><div class="btn-back" onclick="closeGames()">✕</div><div class="mines-grid" id="mines-board"></div><button class="action-btn" onclick="initMines()">NEW GAME</button></div>
-    
-    <div id="rps-screen" class="game-overlay"><div class="btn-back" onclick="closeGames()">✕</div><div id="rps-hand" style="font-size: 60px; margin-bottom: 20px;">✊</div><button class="action-btn" onclick="playRPS('✊')">ROCK</button><button class="action-btn" onclick="playRPS('✋')">PAPER</button><button class="action-btn" onclick="playRPS('✌️')">SCISSORS</button></div>
+<div id="mines-screen" class="screen">
+    <div class="top-nav" onclick="closeGame()">[BACK]</div>
+    <div id="m-status">ЗАМИНИРУЙ 3 КЛЕТКИ</div>
+    <div class="grid-3" id="m-grid"></div>
+    <button id="m-btn" style="margin-top:20px; background:var(--green); border:none; padding:10px; font-family:'Press Start 2P'; font-size:8px; display:none;" onclick="confirmMines()">BATTLE!</button>
+</div>
 
-    <div id="coin-screen" class="game-overlay">
-        <div class="btn-back" onclick="closeGames()">✕</div>
-        <div id="coin-box" class="coin">?</div>
-        <button class="action-btn" onclick="flipCoin()">FLIP COIN</button>
-    </div>
+<div id="roulette-screen" class="screen">
+    <div class="top-nav" onclick="closeGame()">[BACK]</div>
+    <div class="gun" id="gun-obj"></div>
+    <div id="r-status">CYLINDER READY</div>
+    <button style="margin-top:40px; background:var(--red); color:white; border:none; padding:15px; font-family:'Press Start 2P';" onclick="pullTrigger()">PULL TRIGGER</button>
+</div>
 
-    <div id="roulette-screen" class="game-overlay">
-        <div class="btn-back" onclick="closeGames()">✕</div>
-        <div id="cyl" class="cylinder">💀</div>
-        <div id="roulette-status" style="margin-bottom: 20px; font-size: 12px; color: var(--red);">CHAMBER LOADED</div>
-        <button class="action-btn" style="border-color: var(--red);" onclick="pullTrigger()">PULL TRIGGER</button>
-    </div>
+<div id="coin-screen" class="screen">
+    <div class="top-nav" onclick="closeGame()">[BACK]</div>
+    <div class="coin" id="coin-obj">$</div>
+    <button style="margin-top:50px; background:var(--gold); border:none; padding:15px; font-family:'Press Start 2P';" onclick="startFlip()">FLIP</button>
+</div>
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+<div id="rps-screen" class="screen">
+    <div class="top-nav" onclick="closeGame()">[BACK]</div>
+    <div id="rps-status" style="margin-bottom:30px;">CHOOSE WEAPON</div>
+    <button class="card" style="width:100%; color:white;" onclick="playRPS('✊')">ROCK</button>
+    <button class="card" style="width:100%; color:white;" onclick="playRPS('✋')">PAPER</button>
+    <button class="card" style="width:100%; color:white;" onclick="playRPS('✌️')">SCISSORS</button>
+</div>
 
-        setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            document.getElementById('app').style.opacity = '1';
-            if (tg.initDataUnsafe?.user) {
-                const u = tg.initDataUnsafe.user;
-                document.getElementById('nick').innerText = (u.username || u.first_name).toUpperCase();
-                document.getElementById('uid').innerText = u.id;
-                document.getElementById('avatar').innerText = u.first_name[0];
-            }
-            document.getElementById('ip').innerText = "IP: 192.168." + Math.floor(Math.random()*255) + "." + Math.floor(Math.random()*255);
-        }, 2000);
+<div class="flash" id="flash-fx"></div>
+<div class="bottom-bar">
+    <div class="nav-item active">GAMES</div>
+    <div class="nav-item">BANK</div>
+    <div class="nav-item">STATS</div>
+</div>
 
-        function openGame(id) {
-            tg.HapticFeedback.impactOccurred('medium');
-            document.querySelectorAll('.game-overlay').forEach(s => s.style.display = 'none');
-            document.getElementById(id + '-screen').style.display = 'flex';
-            if(id === 'mines') initMines();
-        }
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-        function closeGames() { document.querySelectorAll('.game-overlay').forEach(s => s.style.display = 'none'); }
+    // --- ЗВУКОВОЙ ДВИЖОК (PIXEL SOUNDS) ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let ctx = null;
 
-        // COIN FLIP
-        function flipCoin() {
-            const coin = document.getElementById('coin-box');
-            tg.HapticFeedback.impactOccurred('medium');
-            coin.classList.add('flip');
-            coin.innerText = "⏳";
-            setTimeout(() => {
-                const res = Math.random() > 0.5 ? '📀' : '💿';
-                coin.innerText = res;
-                coin.classList.remove('flip');
-                tg.HapticFeedback.notificationOccurred('success');
-            }, 600);
-        }
+    function initAudio() { if(!ctx) ctx = new AudioCtx(); }
 
-        // ROULETTE
-        let bullet = Math.floor(Math.random() * 6);
-        let currentPos = 0;
-        function pullTrigger() {
-            const cyl = document.getElementById('cyl');
-            tg.HapticFeedback.impactOccurred('heavy');
-            cyl.classList.add('spin');
-            setTimeout(() => {
-                cyl.classList.remove('spin');
-                if(currentPos === bullet) {
-                    document.getElementById('roulette-status').innerText = "DEAD. SYSTEM CRASHED.";
-                    cyl.innerText = "💥";
-                    tg.HapticFeedback.notificationOccurred('error');
-                    bullet = Math.floor(Math.random() * 6);
-                    currentPos = 0;
-                } else {
-                    document.getElementById('roulette-status').innerText = "CLICK. YOU ARE SAFE.";
-                    cyl.innerText = "💨";
-                    currentPos++;
+    function playNote(freq, dur, type="square") {
+        initAudio();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+    }
+
+    // Музыка лобби (зацикленная)
+    function startMusic() {
+        setInterval(() => {
+            playNote(220, 0.1); setTimeout(() => playNote(261, 0.1), 200);
+        }, 800);
+    }
+
+    // --- ЛОГИКА ИГР ---
+    function openGame(id) {
+        initAudio();
+        playNote(440, 0.05);
+        document.getElementById('lobby').style.display = 'none';
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        document.getElementById(id + '-screen').style.display = 'flex';
+        if(id === 'mines') resetMines();
+        if(id === 'roulette') resetRoulette();
+    }
+
+    function closeGame() {
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        document.getElementById('lobby').style.display = 'block';
+    }
+
+    // MINES 3x3
+    let playerMines = [];
+    let enemyMines = [];
+    function resetMines() {
+        playerMines = [];
+        let grid = document.getElementById('m-grid');
+        grid.innerHTML = '';
+        for(let i=0; i<9; i++) {
+            let t = document.createElement('div');
+            t.className = 'tile';
+            t.onclick = () => {
+                if(playerMines.includes(i)) return;
+                if(playerMines.length < 3) {
+                    playerMines.push(i);
+                    t.classList.add('selected');
+                    playNote(300, 0.1);
+                    if(playerMines.length === 3) document.getElementById('m-btn').style.display = 'block';
                 }
-            }, 300);
+            };
+            grid.appendChild(t);
         }
+    }
+    function confirmMines() {
+        enemyMines = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => 0.5 - Math.random()).slice(0, 3);
+        document.getElementById('m-status').innerText = "БИТВА! ИЩИ ЧИСТЫЕ КЛЕТКИ";
+        document.getElementById('m-btn').style.display = 'none';
+        document.querySelectorAll('.tile').forEach((t, i) => {
+            t.classList.remove('selected');
+            t.onclick = () => {
+                if(t.classList.contains('open')) return;
+                t.classList.add('open');
+                if(enemyMines.includes(i)) {
+                    t.innerText = '💣'; t.style.background = 'red';
+                    playNote(100, 0.3, "sawtooth");
+                    tg.HapticFeedback.notificationOccurred('error');
+                } else {
+                    t.innerText = '💎';
+                    playNote(800, 0.1);
+                }
+            };
+        });
+    }
 
-        // MINES & RPS (Механики из прошлого кода)
-        function initMines() {
-            const board = document.getElementById('mines-board'); board.innerHTML = '';
-            let bombs = Array(25).fill(false); for(let i=0; i<3; i++) bombs[Math.floor(Math.random()*25)] = true;
-            for(let i=0; i<25; i++) {
-                let cell = document.createElement('div'); cell.className = 'mine-cell';
-                cell.onclick = () => {
-                    if(cell.classList.contains('open')) return;
-                    cell.classList.add('open');
-                    if(bombs[i]) { cell.innerText = '💣'; tg.HapticFeedback.notificationOccurred('error'); }
-                    else { cell.innerText = '💎'; tg.HapticFeedback.impactOccurred('light'); }
-                };
-                board.appendChild(cell);
-            }
+    // ROULETTE
+    let bullet = 0;
+    function resetRoulette() { bullet = Math.floor(Math.random()*6); }
+    function pullTrigger() {
+        let current = Math.floor(Math.random()*6);
+        if(current === bullet) {
+            document.getElementById('flash-fx').style.display = 'block';
+            playNote(50, 0.5, "sawtooth");
+            tg.HapticFeedback.notificationOccurred('error');
+            setTimeout(() => { document.getElementById('flash-fx').style.display = 'none'; alert("WASTED"); closeGame(); }, 100);
+        } else {
+            playNote(400, 0.05);
+            document.getElementById('r-status').innerText = "CLICK... SAFE";
+            tg.HapticFeedback.impactOccurred('light');
         }
+    }
 
-        function playRPS(user) {
-            const hands = ['✊', '✋', '✌️']; const bot = hands[Math.floor(Math.random()*3)];
-            document.getElementById('rps-hand').innerText = bot;
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-    </script>
+    // COIN
+    function startFlip() {
+        let c = document.getElementById('coin-obj');
+        c.classList.add('flipping');
+        playNote(600, 0.5);
+        setTimeout(() => {
+            c.classList.remove('flipping');
+            let win = Math.random() > 0.5;
+            c.innerText = win ? "G" : "B";
+            playNote(win ? 1000 : 200, 0.2);
+        }, 1000);
+    }
+
+    // RPS
+    function playRPS(user) {
+        let options = ['✊', '✋', '✌️'];
+        let bot = options[Math.floor(Math.random()*3)];
+        playNote(500, 0.1);
+        alert(`BOT: ${bot} | YOU: ${user}`);
+    }
+
+    // Первая активация звука
+    window.onclick = () => { if(!ctx) { initAudio(); startMusic(); } };
+
+    if(tg.initDataUnsafe?.user) {
+        document.getElementById('uid').innerText = tg.initDataUnsafe.user.id.toString().slice(-4);
+    }
+</script>
 </body>
 </html>
