@@ -3,188 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2DUELS PREMIER</title>
+    <title>2DUELS ULTIMATE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --accent: #00f2ff;
-            --bg: #050507;
-            --panel: rgba(255, 255, 255, 0.02);
-            --border: rgba(0, 242, 255, 0.2);
-        }
+        :root { --accent: #00f2ff; --red: #ff0044; --bg: #050508; --panel: rgba(255,255,255,0.03); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; overflow: hidden; height: 100vh; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--bg);
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        /* PRELOADER */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .loading-logo { font-family: 'Orbitron'; font-size: 32px; letter-spacing: 8px; color: var(--accent); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        /* Анимированная сетка на фоне */
-        .grid-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(var(--border) 1px, transparent 1px), 
-                              linear-gradient(90deg, var(--border) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: center;
-            opacity: 0.1;
-            z-index: -1;
-            mask-image: radial-gradient(circle at center, black, transparent 80%);
-        }
+        /* MAIN APP */
+        .app-content { display: none; opacity: 0; transition: 0.5s; height: 100vh; flex-direction: column; }
+        .header { padding: 15px 20px; border-bottom: 1px solid rgba(0,242,255,0.1); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); }
+        .avatar { width: 35px; height: 35px; border: 1px solid var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; color: var(--accent); font-size: 12px; }
 
-        /* Шапка с данными юзера */
-        .user-header {
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
+        /* MENU GRID */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        .game-card { background: var(--panel); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 10px; text-align: center; transition: 0.2s; }
+        .game-card:active { transform: scale(0.95); border-color: var(--accent); }
+        .game-card span { font-size: 24px; display: block; margin-bottom: 8px; }
+        .game-card h3 { font-family: 'Orbitron'; font-size: 10px; letter-spacing: 1px; margin: 0; color: #aaa; }
 
-        .user-info { display: flex; align-items: center; gap: 12px; }
-        .avatar {
-            width: 45px; height: 45px;
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            background: var(--panel);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Orbitron'; color: var(--accent);
-        }
+        /* GAME OVERLAYS */
+        .game-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 100; padding: 20px; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-back { position: absolute; top: 20px; right: 20px; font-size: 24px; color: #444; z-index: 110; }
+        .action-btn { background: var(--panel); border: 1px solid var(--accent); color: #fff; padding: 15px; border-radius: 12px; margin: 10px; font-family: 'Orbitron'; font-size: 12px; width: 80%; transition: 0.2s; }
+        .action-btn:active { background: var(--accent); color: #000; }
 
-        .user-meta { font-size: 10px; color: #666; text-transform: uppercase; }
-        .username { font-family: 'Orbitron'; font-size: 14px; color: #fff; margin-top: 2px; }
+        /* COIN FLIP ANIMATION */
+        .coin { width: 100px; height: 100px; background: var(--panel); border: 4px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 30px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .coin.flip { transform: rotateY(720deg) scale(1.2); }
 
-        .sys-stats { text-align: right; font-size: 9px; color: var(--accent); opacity: 0.7; }
+        /* ROULETTE STYLES */
+        .cylinder { width: 150px; height: 150px; border: 2px dashed var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; transition: 0.5s; }
+        .cylinder.spin { transform: rotate(360deg); }
 
-        /* Контент */
-        .container {
-            padding: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Визуализация игр */
-        .game-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .game-card {
-            background: var(--panel);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 25px 15px;
-            position: relative;
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .game-card::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); opacity: 0; transition: 0.3s;
-        }
-
-        .game-card:active {
-            background: rgba(0, 242, 255, 0.05);
-            border-color: var(--accent);
-        }
-        .game-card:active::after { opacity: 1; }
-
-        .game-card h3 { font-family: 'Orbitron'; font-size: 12px; letter-spacing: 2px; margin-top: 10px; }
-        .game-card span { font-size: 24px; }
-
-        /* Футер (меню) */
-        .nav {
-            padding: 20px;
-            display: flex;
-            justify-content: space-around;
-            background: rgba(0,0,0,0.5);
-            border-top: 1px solid var(--border);
-        }
-        .nav-btn { font-size: 18px; opacity: 0.4; transition: 0.3s; }
-        .nav-btn.active { opacity: 1; color: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
-
+        /* MINES GRID */
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; margin: 20px 0; }
+        .mine-cell { aspect-ratio: 1; background: var(--panel); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .mine-cell.open { background: #1a1a2e; border-color: var(--accent); }
     </style>
 </head>
 <body>
-    <div class="grid-bg"></div>
 
-    <div class="user-header">
-        <div class="user-info">
-            <div class="avatar" id="avatar-init">?</div>
-            <div>
-                <div class="user-meta" id="ip-display">FETCHING IP...</div>
-                <div class="username" id="user-name">GUEST_PLAYER</div>
+    <div id="loader">
+        <div class="loading-logo">2DUELS</div>
+        <div style="font-size: 8px; color: #444; margin-top: 15px; letter-spacing: 3px;">INITIALIZING CORE...</div>
+    </div>
+
+    <div class="app-content" id="app">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="avatar" id="avatar">?</div>
+                <div>
+                    <div id="ip" style="font-size: 8px; color: var(--accent);">IP: 127.0.0.1</div>
+                    <div id="nick" style="font-family: 'Orbitron'; font-size: 13px;">PLAYER</div>
+                </div>
             </div>
+            <div style="text-align: right; font-size: 8px; color: #444;">ID: <span id="uid">---</span></div>
         </div>
-        <div class="sys-stats">
-            ID: <span id="user-id">000000</span><br>
-            PING: 24ms<br>
-            VER: 2.0.4
+
+        <div class="menu-grid">
+            <div class="game-card" onclick="openGame('mines')"><span>💣</span><h3>MINES</h3></div>
+            <div class="game-card" onclick="openGame('rps')"><span>✌️</span><h3>PVP RPS</h3></div>
+            <div class="game-card" onclick="openGame('coin')"><span>🪙</span><h3>COIN FLIP</h3></div>
+            <div class="game-card" onclick="openGame('roulette')"><span>🔫</span><h3>ROULETTE</h3></div>
         </div>
     </div>
 
-    <div class="container">
-        <div style="font-size: 10px; color: #444; letter-spacing: 4px;">MAIN_DIRECTORIES</div>
-        
-        <div class="game-grid">
-            <div class="game-card" onclick="tgVibrate()">
-                <span>💣</span>
-                <h3>MINES</h3>
-            </div>
-            <div class="game-card" onclick="tgVibrate()">
-                <span>📈</span>
-                <h3>CRASH</h3>
-            </div>
-            <div class="game-card" onclick="tgVibrate()">
-                <span>🎲</span>
-                <h3>DICE</h3>
-            </div>
-            <div class="game-card" onclick="tgVibrate()">
-                <span>🎰</span>
-                <h3>SLOTS</h3>
-            </div>
-        </div>
+    <div id="mines-screen" class="game-overlay"><div class="btn-back" onclick="closeGames()">✕</div><div class="mines-grid" id="mines-board"></div><button class="action-btn" onclick="initMines()">NEW GAME</button></div>
+    
+    <div id="rps-screen" class="game-overlay"><div class="btn-back" onclick="closeGames()">✕</div><div id="rps-hand" style="font-size: 60px; margin-bottom: 20px;">✊</div><button class="action-btn" onclick="playRPS('✊')">ROCK</button><button class="action-btn" onclick="playRPS('✋')">PAPER</button><button class="action-btn" onclick="playRPS('✌️')">SCISSORS</button></div>
+
+    <div id="coin-screen" class="game-overlay">
+        <div class="btn-back" onclick="closeGames()">✕</div>
+        <div id="coin-box" class="coin">?</div>
+        <button class="action-btn" onclick="flipCoin()">FLIP COIN</button>
     </div>
 
-    <div class="nav">
-        <div class="nav-btn active">⌘</div>
-        <div class="nav-btn">⏚</div>
-        <div class="nav-btn">⌬</div>
-        <div class="nav-btn">⚙</div>
+    <div id="roulette-screen" class="game-overlay">
+        <div class="btn-back" onclick="closeGames()">✕</div>
+        <div id="cyl" class="cylinder">💀</div>
+        <div id="roulette-status" style="margin-bottom: 20px; font-size: 12px; color: var(--red);">CHAMBER LOADED</div>
+        <button class="action-btn" style="border-color: var(--red);" onclick="pullTrigger()">PULL TRIGGER</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = '#050507';
-        tg.backgroundColor = '#050507';
 
-        // Подгружаем реальные данные из ТГ
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            document.getElementById('user-name').innerText = (user.username || user.first_name).toUpperCase();
-            document.getElementById('user-id').innerText = user.id;
-            document.getElementById('avatar-init').innerText = user.first_name[0].toUpperCase();
+        setTimeout(() => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            document.getElementById('app').style.opacity = '1';
+            if (tg.initDataUnsafe?.user) {
+                const u = tg.initDataUnsafe.user;
+                document.getElementById('nick').innerText = (u.username || u.first_name).toUpperCase();
+                document.getElementById('uid').innerText = u.id;
+                document.getElementById('avatar').innerText = u.first_name[0];
+            }
+            document.getElementById('ip').innerText = "IP: 192.168." + Math.floor(Math.random()*255) + "." + Math.floor(Math.random()*255);
+        }, 2000);
+
+        function openGame(id) {
+            tg.HapticFeedback.impactOccurred('medium');
+            document.querySelectorAll('.game-overlay').forEach(s => s.style.display = 'none');
+            document.getElementById(id + '-screen').style.display = 'flex';
+            if(id === 'mines') initMines();
         }
 
-        // Имитация IP (можно подтянуть через API, но для дизайна пока так)
-        document.getElementById('ip-display').innerText = "IP: 188.162.0." + Math.floor(Math.random() * 255);
+        function closeGames() { document.querySelectorAll('.game-overlay').forEach(s => s.style.display = 'none'); }
 
-        function tgVibrate() {
+        // COIN FLIP
+        function flipCoin() {
+            const coin = document.getElementById('coin-box');
+            tg.HapticFeedback.impactOccurred('medium');
+            coin.classList.add('flip');
+            coin.innerText = "⏳";
+            setTimeout(() => {
+                const res = Math.random() > 0.5 ? '📀' : '💿';
+                coin.innerText = res;
+                coin.classList.remove('flip');
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 600);
+        }
+
+        // ROULETTE
+        let bullet = Math.floor(Math.random() * 6);
+        let currentPos = 0;
+        function pullTrigger() {
+            const cyl = document.getElementById('cyl');
+            tg.HapticFeedback.impactOccurred('heavy');
+            cyl.classList.add('spin');
+            setTimeout(() => {
+                cyl.classList.remove('spin');
+                if(currentPos === bullet) {
+                    document.getElementById('roulette-status').innerText = "DEAD. SYSTEM CRASHED.";
+                    cyl.innerText = "💥";
+                    tg.HapticFeedback.notificationOccurred('error');
+                    bullet = Math.floor(Math.random() * 6);
+                    currentPos = 0;
+                } else {
+                    document.getElementById('roulette-status').innerText = "CLICK. YOU ARE SAFE.";
+                    cyl.innerText = "💨";
+                    currentPos++;
+                }
+            }, 300);
+        }
+
+        // MINES & RPS (Механики из прошлого кода)
+        function initMines() {
+            const board = document.getElementById('mines-board'); board.innerHTML = '';
+            let bombs = Array(25).fill(false); for(let i=0; i<3; i++) bombs[Math.floor(Math.random()*25)] = true;
+            for(let i=0; i<25; i++) {
+                let cell = document.createElement('div'); cell.className = 'mine-cell';
+                cell.onclick = () => {
+                    if(cell.classList.contains('open')) return;
+                    cell.classList.add('open');
+                    if(bombs[i]) { cell.innerText = '💣'; tg.HapticFeedback.notificationOccurred('error'); }
+                    else { cell.innerText = '💎'; tg.HapticFeedback.impactOccurred('light'); }
+                };
+                board.appendChild(cell);
+            }
+        }
+
+        function playRPS(user) {
+            const hands = ['✊', '✋', '✌️']; const bot = hands[Math.floor(Math.random()*3)];
+            document.getElementById('rps-hand').innerText = bot;
             tg.HapticFeedback.impactOccurred('medium');
         }
     </script>
