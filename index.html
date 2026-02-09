@@ -3,255 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2DUELS: ELITE OS</title>
+    <title>2DUELS: MULTI-OS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00f2ff; --bg: #050608; --card: rgba(255,255,255,0.06); --red: #ff3b3b; --gold: #ff9500; }
+        :root { --accent: #00f2ff; --bg: #000; --card: #0d0e12; --border: #1f2128; --red: #ff3b3b; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
 
-        /* --- UI SHELL --- */
-        .app-container { height: 100vh; display: flex; flex-direction: column; background: radial-gradient(circle at top right, rgba(0,242,255,0.05), transparent); }
-        
-        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .user-block { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(0,242,255,0.2); overflow: hidden; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .stars-badge { background: linear-gradient(90deg, var(--gold), #ffcc00); color: #000; padding: 6px 14px; border-radius: 20px; font-weight: 900; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        /* --- HEADER & TOGGLE --- */
+        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .mode-toggle { display: flex; background: var(--card); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+        .mode-btn { padding: 6px 12px; border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .mode-btn.active { background: var(--accent); color: #000; }
 
-        /* --- LOBBY SYSTEM --- */
-        .lobby { flex: 1; padding: 0 20px; overflow-y: auto; }
-        .section-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.3); letter-spacing: 2px; margin: 20px 0 10px; text-transform: uppercase; }
-        
-        .room-item { 
-            background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; 
-            padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(10px); animation: slideIn 0.4s ease-out;
+        /* --- DASHBOARD --- */
+        .content { height: calc(100vh - 140px); overflow-y: auto; padding: 20px; }
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .game-card { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; 
+            text-align: center; transition: 0.3s; position: relative; overflow: hidden;
         }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .game-card:active { transform: scale(0.95); border-color: var(--accent); }
+        .game-card i { font-size: 30px; display: block; margin-bottom: 10px; }
+        .game-card b { font-family: 'Orbitron'; font-size: 12px; letter-spacing: 1px; }
 
-        .btn-action { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 12px; font-family: 'Orbitron'; }
-        .btn-main { width: 100%; background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; font-family: 'Orbitron'; margin-top: 10px; box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
+        /* --- LOBBY (BOTTOM) --- */
+        .lobby-section { background: #08090b; border-radius: 30px 30px 0 0; border-top: 1px solid var(--border); padding: 20px; min-height: 200px; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 15px; border-radius: 15px; margin-bottom: 8px; font-size: 12px; border: 1px solid var(--border); }
+        .status-dot { width: 6px; height: 6px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 10px #00ff00; }
 
-        /* --- GAME ENGINE SCREENS --- */
-        .screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; flex-direction: column; padding: 20px; }
-        .grid-mines { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 30px auto; width: 100%; max-width: 340px; }
-        .tile { 
-            aspect-ratio: 1; background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; 
-            display: flex; align-items: center; justify-content: center; font-size: 32px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .tile.selected { border-color: var(--red); background: rgba(255,59,59,0.1); box-shadow: inset 0 0 20px rgba(255,59,59,0.1); }
-        .tile.open { background: rgba(0,242,255,0.1); border-color: var(--accent); transform: rotateY(180deg); }
+        /* --- SCREENS --- */
+        .screen { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; padding: 20px; flex-direction: column; }
+        .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 50px; }
+        .tile { aspect-ratio: 1; background: var(--card); border: 1px solid var(--border); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.2s; }
+        .tile.active { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,242,255,0.2); }
 
-        /* --- RPS ANIMATION --- */
-        .rps-arena { display: flex; justify-content: space-around; align-items: center; height: 200px; margin-top: 50px; }
-        .hand { font-size: 80px; transition: 0.3s; filter: drop-shadow(0 0 15px var(--accent)); }
-        .shake { animation: handShake 0.5s infinite; }
-        @keyframes handShake { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-30px) rotate(-10deg); } }
-
-        /* --- NAV BAR --- */
-        .nav-bar { padding: 20px; display: flex; justify-content: space-around; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { opacity: 0.4; font-size: 10px; font-weight: 800; text-align: center; }
+        .btn-exit { color: var(--red); font-family: 'Orbitron'; font-size: 12px; font-weight: 900; }
+        
+        /* --- NAV --- */
+        .nav { height: 70px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); background: #000; }
+        .nav-item { font-size: 10px; opacity: 0.4; font-weight: 800; text-align: center; }
         .nav-item.active { opacity: 1; color: var(--accent); }
     </style>
 </head>
 <body>
 
-<div class="app-container" id="lobby-screen">
     <div class="header">
-        <div class="user-block">
-            <div class="avatar"><img id="u-pfp" src=""></div>
-            <div>
-                <div id="u-name" style="font-weight: 800; font-size: 15px;">AGENT</div>
-                <div style="font-size: 9px; color: var(--accent); font-family: 'Orbitron';">RANK: ELITE</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="font-family:'Orbitron'; font-size:16px; font-weight:900; color:var(--accent);">2DUELS</div>
+        </div>
+        <div class="mode-toggle">
+            <div class="mode-btn active" id="btn-demo" onclick="setMode('demo')">DEMO</div>
+            <div class="mode-btn" id="btn-pvp" onclick="setMode('pvp')">PVP</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div style="font-size:10px; color:#555; margin-bottom:15px; letter-spacing:2px; font-weight:800;">AVAILABLE_MODULES</div>
+        
+        <div class="game-grid">
+            <div class="game-card" onclick="openGame('mines')">
+                <i>💣</i><b>MINES</b>
+                <div style="font-size:8px; opacity:0.5; margin-top:5px;">STRATEGY</div>
+            </div>
+            <div class="game-card" onclick="openGame('rps')">
+                <i>⚔️</i><b>RPS</b>
+                <div style="font-size:8px; opacity:0.5; margin-top:5px;">SKILL</div>
+            </div>
+            <div class="game-card" onclick="openGame('slots')">
+                <i>🎰</i><b>SLOTS</b>
+                <div style="font-size:8px; opacity:0.5; margin-top:5px;">LUCK</div>
+            </div>
+            <div class="game-card" onclick="alert('SOON')">
+                <i>🎲</i><b>DICE</b>
+                <div style="font-size:8px; opacity:0.5; margin-top:5px;">RISK</div>
             </div>
         </div>
-        <div class="stars-badge">⭐ <span id="u-balance">1000</span></div>
-    </div>
 
-    <div class="lobby">
-        <div class="section-label">Active Duels</div>
-        <div id="rooms-list">
-            <div style="text-align: center; opacity: 0.2; margin-top: 50px;">SEARCHING FOR TARGETS...</div>
+        <div class="lobby-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <span style="font-size:11px; font-weight:800; color:#555;">ACTIVE_PLAYERS</span>
+                <span style="font-size:11px; color:var(--accent);" id="online-count">● 12 Online</span>
+            </div>
+            <div id="lobby-list">
+                <div class="player-row"><span>system_root</span><div class="status-dot"></div></div>
+                <div class="player-row"><span>shadow_walker</span><div class="status-dot"></div></div>
+            </div>
         </div>
-        
-        <div class="section-label">Quick Actions</div>
-        <button class="btn-main" onclick="initCreateRoom()">CREATE CUSTOM DUEL</button>
-        <button class="btn-main" style="background: var(--card); color: #fff; border: 1px solid var(--border);" onclick="tg.openTelegramLink('https://t.me/share/url?url=t.me/your_bot')">INVITE FRIEND</button>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active">BATTLE</div>
-        <div class="nav-item">NFT BANK</div>
-        <div class="nav-item">OS</div>
+    <div class="nav">
+        <div class="nav-item active">GAMES</div>
+        <div class="nav-item">WALLET (0)</div>
+        <div class="nav-item">OS_v1.0</div>
     </div>
-</div>
 
-<div id="mines-screen" class="screen">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-family: 'Orbitron'; font-size: 10px; color: var(--accent);">MINES_v5_OS</div>
-        <div onclick="exitGame()" style="color: var(--red); font-weight: 900; font-size: 12px;">[ABORT]</div>
+    <div id="game-mines" class="screen">
+        <div style="display:flex; justify-content:space-between;">
+            <span style="font-family:'Orbitron'; font-size:12px;">MINES_PROXIMITY</span>
+            <span class="btn-exit" onclick="closeGame()">[CLOSE]</span>
+        </div>
+        <div class="grid-3x3" id="mines-grid"></div>
+        <div id="game-msg" style="text-align:center; margin-top:30px; font-size:12px; font-family:'Orbitron'; color:var(--accent);">SELECT 3 TILES</div>
+        <button id="mines-action" style="width:100%; background:var(--accent); border:none; padding:20px; border-radius:15px; margin-top:40px; font-weight:900; display:none;" onclick="minesConfirm()">CONFIRM</button>
     </div>
-    <div id="game-status" style="text-align: center; margin-top: 40px; font-family: 'Orbitron'; color: var(--accent); font-size: 12px;">SET 3 TRAPS</div>
-    <div class="grid-mines" id="m-grid"></div>
-    <button id="m-btn" style="display:none; width:100%; background:var(--accent); color:#000; border:none; padding:20px; border-radius:20px; font-family:'Orbitron'; font-weight:900;" onclick="sendTraps()">INITIALIZE BATTLE</button>
-</div>
 
-<script>
-    // --- FIREBASE CONFIG (Твои ключи) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-        authDomain: "duels-1fb6b.firebaseapp.com",
-        databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-        projectId: "duels-1fb6b",
-        storageBucket: "duels-1fb6b.firebasestorage.app",
-        messagingSenderId: "745698956226",
-        appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-    };
+    <script>
+        // FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+        let tg = window.Telegram.WebApp;
+        let mode = 'demo';
+        let mySelected = [];
 
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-    let user = tg.initDataUnsafe?.user || { id: "test_" + Math.random(), first_name: "DEV_PLAYER" };
-    let currentRoom = null;
-    let myTraps = [];
-
-    // Setup UI
-    document.getElementById('u-name').innerText = user.first_name.toUpperCase();
-    document.getElementById('u-pfp').src = user.photo_url || 'https://via.placeholder.com/100';
-
-    // --- LOBBY REALTIME ---
-    db.ref('rooms').on('value', (snap) => {
-        const list = document.getElementById('rooms-list');
-        list.innerHTML = '';
-        const rooms = snap.val();
-        if(!rooms) {
-            list.innerHTML = '<div style="text-align:center; opacity:0.1; margin-top:50px;">NO ROOMS FOUND</div>';
-            return;
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-demo').classList.toggle('active', m === 'demo');
+            document.getElementById('btn-pvp').classList.toggle('active', m === 'pvp');
+            tg.HapticFeedback.impactOccurred('light');
         }
-        
-        Object.keys(rooms).forEach(id => {
-            if(rooms[id].status === 'waiting' && rooms[id].creatorId != user.id) {
-                const room = document.createElement('div');
-                room.className = 'room-item';
-                room.innerHTML = `
-                    <div>
-                        <div style="font-weight:800; font-size:14px;">${rooms[id].creatorName}</div>
-                        <div style="color:var(--gold); font-size:10px; font-weight:700;">BET: 100 STARS</div>
-                    </div>
-                    <button class="btn-action" onclick="joinRoom('${id}')">BATTLE</button>
-                `;
-                list.appendChild(room);
+
+        function openGame(game) {
+            if(game === 'mines') {
+                document.getElementById('game-mines').style.display = 'flex';
+                renderMines();
+            } else {
+                alert('Game starting soon...');
             }
-        });
-    });
-
-    // --- GAME LOGIC ---
-    function initCreateRoom() {
-        currentRoom = 'room_' + Date.now();
-        db.ref('rooms/' + currentRoom).set({
-            creatorId: user.id,
-            creatorName: user.first_name,
-            status: 'waiting',
-            createdAt: Date.now()
-        });
-        openMines();
-    }
-
-    function joinRoom(id) {
-        currentRoom = id;
-        db.ref('rooms/' + id).update({
-            opponentId: user.id,
-            opponentName: user.first_name,
-            status: 'playing'
-        });
-        openMines();
-    }
-
-    function openMines() {
-        document.getElementById('mines-screen').style.display = 'flex';
-        renderMinesGrid();
-    }
-
-    function renderMinesGrid() {
-        const grid = document.getElementById('m-grid');
-        grid.innerHTML = '';
-        myTraps = [];
-        document.getElementById('game-status').innerText = "SET 3 TRAPS FOR ENEMY";
-        
-        for(let i=0; i<9; i++) {
-            const tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.onclick = () => {
-                if(myTraps.includes(i)) {
-                    myTraps = myTraps.filter(t => t !== i);
-                    tile.classList.remove('selected'); tile.innerHTML = '';
-                } else if(myTraps.length < 3) {
-                    myTraps.push(i);
-                    tile.classList.add('selected'); tile.innerHTML = '💣';
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-                document.getElementById('m-btn').style.display = (myTraps.length === 3) ? 'block' : 'none';
-            };
-            grid.appendChild(tile);
         }
-    }
 
-    function sendTraps() {
-        db.ref('rooms/' + currentRoom + '/traps/' + user.id).set(myTraps);
-        document.getElementById('m-btn').style.display = 'none';
-        document.getElementById('game-status').innerText = "WAITING FOR OPPONENT...";
-        
-        // Listen for both ready
-        db.ref('rooms/' + currentRoom + '/traps').on('value', (snap) => {
-            if(snap.numChildren() === 2) {
-                startActualBattle(snap.val());
+        function closeGame() {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        }
+
+        function renderMines() {
+            const grid = document.getElementById('mines-grid');
+            grid.innerHTML = '';
+            mySelected = [];
+            document.getElementById('mines-action').style.display = 'none';
+            
+            for(let i=0; i<9; i++) {
+                const t = document.createElement('div');
+                t.className = 'tile';
+                t.onclick = () => {
+                    if(mySelected.includes(i)) {
+                        mySelected = mySelected.filter(x => x !== i);
+                        t.classList.remove('active'); t.innerHTML = '';
+                    } else if(mySelected.length < 3) {
+                        mySelected.push(i);
+                        t.classList.add('active'); t.innerHTML = '💣';
+                        tg.HapticFeedback.impactOccurred('medium');
+                    }
+                    document.getElementById('mines-action').style.display = (mySelected.length === 3) ? 'block' : 'none';
+                };
+                grid.appendChild(t);
             }
-        });
-    }
+        }
 
-    function startActualBattle(allTraps) {
-        tg.HapticFeedback.notificationOccurred('success');
-        document.getElementById('game-status').innerText = "BATTLE! FIND SAFE TILES";
-        
-        // Get enemy traps
-        const enemyId = Object.keys(allTraps).find(id => id != user.id);
-        const enemyTraps = allTraps[enemyId];
+        function minesConfirm() {
+            if(mode === 'demo') {
+                document.getElementById('game-msg').innerText = "BOT IS READY. OPEN TILES!";
+                // Логика против бота
+                startDemoBattle();
+            } else {
+                // Логика мультиплеера
+                alert('Waiting for real player...');
+            }
+        }
 
-        document.querySelectorAll('.tile').forEach((t, i) => {
-            t.classList.remove('selected');
-            t.innerHTML = '';
-            t.onclick = () => {
-                if(t.classList.contains('open')) return;
-                t.classList.add('open');
-                if(enemyTraps.includes(i)) {
-                    t.innerHTML = '💥';
-                    t.style.background = 'rgba(255,0,0,0.2)';
-                    tg.HapticFeedback.notificationOccurred('error');
-                    setTimeout(() => { alert("DEFEAT! -100 STARS"); exitGame(); }, 500);
-                } else {
-                    t.innerHTML = '💎';
-                    tg.HapticFeedback.impactOccurred('light');
-                }
-            };
-        });
-    }
-
-    function exitGame() {
-        if(currentRoom) db.ref('rooms/' + currentRoom).remove();
-        location.reload();
-    }
-
-</script>
+        function startDemoBattle() {
+            document.getElementById('mines-action').style.display = 'none';
+            const botMines = [0,1,2,3,4,5,6,7,8].sort(() => Math.random() - 0.5).slice(0,3);
+            document.querySelectorAll('.tile').forEach((t, i) => {
+                t.classList.remove('active'); t.innerHTML = '';
+                t.onclick = () => {
+                    if(botMines.includes(i)) {
+                        t.innerHTML = '💥'; t.style.background = 'rgba(255,0,0,0.2)';
+                        tg.HapticFeedback.notificationOccurred('error');
+                        setTimeout(() => { alert('LOSE'); closeGame(); }, 500);
+                    } else {
+                        t.innerHTML = '💎';
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                };
+            });
+        }
+    </script>
 </body>
 </html>
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
