@@ -2,83 +2,57 @@
 // 2DUELS TELEGRAM BOT BACKEND
 // Node.js + Telegram Bot API + Firebase
 // ============================================
-
 const TelegramBot = require('node-telegram-bot-api');
 const admin = require('firebase-admin');
 const express = require('express');
 const crypto = require('crypto');
-
 // ============================================
 // CONFIGURATION
 // ============================================
-
 // Замените на ваш токен от @BotFather
-const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
-
-// URL вашего Mini App
-const WEBAPP_URL = 'https://YOUR_USERNAME.github.io/2duels-miniapp/';
-
-// Firebase Admin SDK Configuration
-// Скачайте serviceAccountKey.json из Firebase Console
-const serviceAccount = require('./serviceAccountKey.json');
-
+const TELEGRAM_BOT_TOKEN 8460513181:AAFLiDoJIkNr0fx7T_jDJ2SNDqnoyHwJ5DE
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com"
 });
-
 const db = admin.database();
-
 // ============================================
 // TELEGRAM BOT INITIALIZATION
 // ============================================
-
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-
 console.log('🚀 2Duels Bot Started!');
 console.log('📡 Listening for commands...');
-
 // ============================================
 // EXPRESS SERVER FOR WEBHOOKS (Optional)
 // ============================================
-
 const app = express();
 app.use(express.json());
-
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`🌐 Server running on port ${PORT}`);
 });
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
-
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
-
 // Verify Telegram WebApp data
 function verifyTelegramWebAppData(telegramInitData, botToken) {
   const initData = new URLSearchParams(telegramInitData);
   const hash = initData.get('hash');
   const dataToCheck = [];
-
   initData.sort();
   initData.forEach((val, key) => {
     if (key !== 'hash') {
       dataToCheck.push(`${key}=${val}`);
     }
   });
-
   const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
   const signature = crypto.createHmac('sha256', secret).update(dataToCheck.join('\n')).digest('hex');
-
   return signature === hash;
 }
-
 // Get user balance from Firebase
 async function getUserBalance(userId) {
   try {
