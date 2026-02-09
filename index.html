@@ -1,213 +1,627 @@
+// ============================================
+// 2DUELS TELEGRAM BOT BACKEND
+// Node.js + Telegram Bot API + Firebase
+// ============================================
 
+const TelegramBot = require('node-telegram-bot-api');
+const admin = require('firebase-admin');
+const express = require('express');
+const crypto = require('crypto');
 
-    <script>
-        // ЛОГИКА ИГР (ОГРОМНЫЙ БЛОК)
-        const play = (gameType) => {
-            console.log(`[CORE] Starting session: ${gameType}`);
-            
-            // Здесь будет логика записи в Firebase Realtime Database
-            // Пример: set(ref(db, 'users/' + userId), { last_game: gameType });
+// ============================================
+// CONFIGURATION
+// ============================================
 
-            switch(gameType) {
-                case 'coin': alert("Монета подброшена! Ждем результат..."); break;
-                case 'mines': alert("Поле заминировано. Выбирай ячейку!"); break;
-                case 'roulette': alert("Барабан крутится... Нажми спуск!"); break;
-                case 'crash': alert("Ракета взлетает! Множитель: 1.05x..."); break;
-            }
-        };
+// Замените на ваш токен от @BotFather
+const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
 
-        // ТЕХНИЧЕСКИЙ ДАМП ДАННЫХ ДЛЯ ОБЪЕМА (500+ строк симуляции)
-        const sys_init = () => {
-            const buffer = [];
-            for(let i=0; i<1000; i++) {
-                buffer.push({
-                    op: "BOOT_SEQUENCE",
-                    sector: i,
-                    status: i % 10 === 0 ? "ERROR_HANDLED" : "READY"
-                });
-            }
-            console.log("SYSTEM_CHECK_COMPLETE: sectors verified");
-        };
-        sys_init();
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>2Duels | Tactical Monolith</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap');
+// URL вашего Mini App
+const WEBAPP_URL = 'https://YOUR_USERNAME.github.io/2duels-miniapp/';
 
-        :root {
-            --neon: #00f2ff;
-            --bg: #050505;
-            --card: #0f0f0f;
-            --border: #1a1a1a;
+// Firebase Admin SDK Configuration
+// Скачайте serviceAccountKey.json из Firebase Console
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com"
+});
+
+const db = admin.database();
+
+// ============================================
+// TELEGRAM BOT INITIALIZATION
+// ============================================
+
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+
+console.log('🚀 2Duels Bot Started!');
+console.log('📡 Listening for commands...');
+
+// ============================================
+// EXPRESS SERVER FOR WEBHOOKS (Optional)
+// ============================================
+
+const app = express();
+app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on port ${PORT}`);
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now() });
+});
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+// Verify Telegram WebApp data
+function verifyTelegramWebAppData(telegramInitData, botToken) {
+  const initData = new URLSearchParams(telegramInitData);
+  const hash = initData.get('hash');
+  const dataToCheck = [];
+
+  initData.sort();
+  initData.forEach((val, key) => {
+    if (key !== 'hash') {
+      dataToCheck.push(`${key}=${val}`);
+    }
+  });
+
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
+  const signature = crypto.createHmac('sha256', secret).update(dataToCheck.join('\n')).digest('hex');
+
+  return signature === hash;
+}
+
+// Get user balance from Firebase
+async function getUserBalance(userId) {
+  try {
+    const snapshot = await db.ref(`users/${userId}/balance`).once('value');
+    return snapshot.val() || 1000; // Default balance
+  } catch (error) {
+    console.error('Error getting balance:', error);
+    return 1000;
+  }
+}
+
+// Update user balance
+async function updateUserBalance(userId, amount) {
+  try {
+    const currentBalance = await getUserBalance(userId);
+    const newBalance = currentBalance + amount;
+    await db.ref(`users/${userId}/balance`).set(newBalance);
+    return newBalance;
+  } catch (error) {
+    console.error('Error updating balance:', error);
+    return null;
+  }
+}
+
+// Get user inventory
+async function getUserInventory(userId) {
+  try {
+    const snapshot = await db.ref(`users/${userId}/inventory`).once('value');
+    const inventory = snapshot.val() || {};
+    return Object.values(inventory);
+  } catch (error) {
+    console.error('Error getting inventory:', error);
+    return [];
+  }
+}
+
+// Get user stats
+async function getUserStats(userId) {
+  try {
+    const snapshot = await db.ref(`users/${userId}/games`).once('value');
+    const games = snapshot.val() || {};
+    
+    let totalGames = 0;
+    let totalWins = 0;
+    
+    Object.keys(games).forEach(gameType => {
+      const gameSessions = Object.values(games[gameType]);
+      totalGames += gameSessions.length;
+      totalWins += gameSessions.filter(session => session.won || session.cashedOut).length;
+    });
+    
+    return {
+      totalGames,
+      totalWins,
+      winRate: totalGames > 0 ? ((totalWins / totalGames) * 100).toFixed(1) : 0
+    };
+  } catch (error) {
+    console.error('Error getting stats:', error);
+    return { totalGames: 0, totalWins: 0, winRate: 0 };
+  }
+}
+
+// ============================================
+// TELEGRAM BOT COMMANDS
+// ============================================
+
+// /start command
+bot.onText(/\/start/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const firstName = msg.from.first_name;
+
+  console.log(`📥 /start command from ${firstName} (${userId})`);
+
+  // Save user to Firebase
+  await db.ref(`users/${userId}`).update({
+    firstName: firstName,
+    username: msg.from.username || '',
+    lastSeen: Date.now()
+  });
+
+  const welcomeMessage = `
+🎮 *2DUELS - TACTICAL MONOLITH*
+
+Добро пожаловать, ${firstName}!
+
+*Доступные игры:*
+🪙 *Coin Flip* - классическая дуэль на удачу
+💣 *Mines* - стратегическое минное поле  
+🔫 *Russian Roulette* - высокие ставки
+🚀 *Crash* - растущий множитель
+
+💎 *NFT Inventory* - храните награды
+⭐ *Telegram Stars* - внутриигровая валюта
+
+_Нажмите кнопку ниже, чтобы начать играть!_
+  `.trim();
+
+  bot.sendMessage(chatId, welcomeMessage, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ 
+          text: '🎮 ИГРАТЬ', 
+          web_app: { url: WEBAPP_URL } 
+        }],
+        [
+          { text: '💰 Баланс', callback_data: 'balance' },
+          { text: '💎 Инвентарь', callback_data: 'inventory' }
+        ],
+        [
+          { text: '📊 Статистика', callback_data: 'stats' },
+          { text: '❓ Помощь', callback_data: 'help' }
+        ]
+      ]
+    }
+  });
+});
+
+// /balance command
+bot.onText(/\/balance/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  console.log(`📥 /balance command from ${userId}`);
+
+  const balance = await getUserBalance(userId);
+
+  bot.sendMessage(chatId, `⭐ *Ваш баланс:* ${balance} звезд`, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }],
+        [{ text: '💳 Пополнить', callback_data: 'topup' }]
+      ]
+    }
+  });
+});
+
+// /inventory command
+bot.onText(/\/inventory/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  console.log(`📥 /inventory command from ${userId}`);
+
+  const inventory = await getUserInventory(userId);
+
+  if (inventory.length === 0) {
+    bot.sendMessage(chatId, `💎 *Ваш инвентарь пуст*\n\n_Выигрывайте в играх, чтобы получить NFT и награды!_`, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
+        ]
+      }
+    });
+  } else {
+    const inventoryText = inventory.map((item, index) => {
+      const rarityEmoji = {
+        common: '⚪',
+        rare: '🔵',
+        epic: '🟣',
+        legendary: '🟡'
+      };
+      return `${index + 1}. ${item.icon} *${item.name}* ${rarityEmoji[item.rarity] || ''}`;
+    }).join('\n');
+
+    bot.sendMessage(chatId, `💎 *Ваш инвентарь* (${inventory.length} предметов):\n\n${inventoryText}`, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
+        ]
+      }
+    });
+  }
+});
+
+// /stats command
+bot.onText(/\/stats/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  console.log(`📥 /stats command from ${userId}`);
+
+  const stats = await getUserStats(userId);
+  const balance = await getUserBalance(userId);
+  const inventory = await getUserInventory(userId);
+
+  const statsMessage = `
+📊 *Ваша статистика*
+
+⭐ *Баланс:* ${balance} звезд
+💎 *NFT предметов:* ${inventory.length}
+
+🎮 *Игры:*
+├ Всего игр: ${stats.totalGames}
+├ Побед: ${stats.totalWins}
+└ Процент побед: ${stats.winRate}%
+  `.trim();
+
+  bot.sendMessage(chatId, statsMessage, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
+      ]
+    }
+  });
+});
+
+// /help command
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+
+  console.log(`📥 /help command from ${msg.from.id}`);
+
+  const helpMessage = `
+❓ *ПОМОЩЬ*
+
+*Доступные команды:*
+/start - Главное меню
+/balance - Проверить баланс
+/inventory - Открыть инвентарь
+/stats - Показать статистику
+/help - Эта справка
+
+*Правила игр:*
+
+🪙 *Орел и Решка*
+Классическая игра на удачу. Выберите сторону монеты и подбросьте. Совпадение = победа!
+
+💣 *Мины*
+Сетка 5x5 с минами. Открывайте ячейки, находите гемы. Попадание на мину = проигрыш.
+
+🔫 *Русская Рулетка*  
+Барабан револьвера с одним зарядом. Нажимайте курок. Выживание = победа!
+
+🚀 *Краш*
+Ракета взлетает с растущим множителем. Заберите выигрыш до взрыва!
+
+*Поддержка:* @YourSupportUsername
+  `.trim();
+
+  bot.sendMessage(chatId, helpMessage, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
+      ]
+    }
+  });
+});
+
+// ============================================
+// CALLBACK QUERY HANDLERS
+// ============================================
+
+bot.on('callback_query', async (query) => {
+  const chatId = query.message.chat.id;
+  const userId = query.from.id;
+  const data = query.data;
+
+  console.log(`📥 Callback query: ${data} from ${userId}`);
+
+  // Answer callback query to remove loading state
+  bot.answerCallbackQuery(query.id);
+
+  switch (data) {
+    case 'balance':
+      const balance = await getUserBalance(userId);
+      bot.sendMessage(chatId, `⭐ *Ваш баланс:* ${balance} звезд`, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }],
+            [{ text: '💳 Пополнить', callback_data: 'topup' }]
+          ]
         }
+      });
+      break;
 
-        body, html {
-            background: var(--bg);
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
+    case 'inventory':
+      const inventory = await getUserInventory(userId);
+      if (inventory.length === 0) {
+        bot.sendMessage(chatId, `💎 *Ваш инвентарь пуст*\n\n_Выигрывайте в играх!_`, {
+          parse_mode: 'Markdown'
+        });
+      } else {
+        const inventoryText = inventory.map((item, index) => 
+          `${index + 1}. ${item.icon} ${item.name}`
+        ).join('\n');
+        bot.sendMessage(chatId, `💎 *Инвентарь:*\n\n${inventoryText}`, {
+          parse_mode: 'Markdown'
+        });
+      }
+      break;
+
+    case 'stats':
+      const stats = await getUserStats(userId);
+      bot.sendMessage(chatId, 
+        `📊 *Статистика:*\n\nИгр: ${stats.totalGames}\nПобед: ${stats.totalWins}\nWin rate: ${stats.winRate}%`,
+        { parse_mode: 'Markdown' }
+      );
+      break;
+
+    case 'help':
+      bot.sendMessage(chatId, `❓ Используйте /help для подробной справки`);
+      break;
+
+    case 'topup':
+      // TODO: Implement Telegram Stars payment
+      bot.sendMessage(chatId, 
+        `💳 *Пополнение баланса*\n\n_Функция пополнения через Telegram Stars будет доступна скоро!_`,
+        { 
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
+            ]
+          }
         }
+      );
+      break;
 
-        /* ЭКРАН ЗАГРУЗКИ (MONOLITH STYLE) */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center;
-        }
-        .boot-terminal {
-            width: 300px; color: var(--neon); font-size: 12px;
-        }
+    default:
+      bot.sendMessage(chatId, `Неизвестная команда: ${data}`);
+  }
+});
 
-        /* HEADER */
-        header {
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
-        .logo-text { font-weight: 800; font-size: 24px; letter-spacing: 2px; color: var(--neon); }
+// ============================================
+// TELEGRAM STARS PAYMENT INTEGRATION
+// (Future implementation)
+// ============================================
 
-        /* GRID */
-        .hub-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 40px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
+/*
+// Invoice creation
+bot.onText(/\/buy (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const productId = match[1];
 
-        .game-node {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 30px;
-            text-align: left;
-            position: relative;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .game-node:hover {
-            border-color: var(--neon);
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
-        }
-        .game-node h3 { margin: 0; text-transform: uppercase; font-size: 18px; }
-        .game-node .desc { font-size: 10px; color: #555; margin-top: 5px; }
+  const prices = {
+    'stars_100': { amount: 100, price: 1 },
+    'stars_500': { amount: 500, price: 4 },
+    'stars_1000': { amount: 1000, price: 7 }
+  };
 
-        /* ИНВЕНТАРЬ / NFT */
-        #nft-storage {
-            position: fixed; bottom: 20px; width: 100%;
-            display: flex; justify-content: center; gap: 10px;
-        }
-        .nft-slot {
-            width: 40px; height: 40px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.05);
-        }
+  const product = prices[productId];
+  
+  if (!product) {
+    bot.sendMessage(chatId, 'Продукт не найден');
+    return;
+  }
 
-        /* ЭКРАН ИГРЫ (ОТДЕЛЬНЫЙ) */
-        #game-view {
-            position: fixed; top: 0; left: 100%; width: 100%; height: 100%;
-            background: var(--bg); transition: 0.5s cubic-bezier(0.7, 0, 0.3, 1);
-            z-index: 5000; padding: 40px; box-sizing: border-box;
-        }
-        #game-view.active { left: 0; }
+  bot.sendInvoice(
+    chatId,
+    `${product.amount} звезд`,
+    `Пополнение баланса на ${product.amount} звезд`,
+    productId,
+    'XTR', // Telegram Stars currency
+    [{ label: `${product.amount} звезд`, amount: product.price }],
+    {
+      photo_url: 'https://example.com/star-icon.png',
+      photo_width: 512,
+      photo_height: 512
+    }
+  );
+});
 
-        .back-btn { cursor: pointer; color: var(--neon); margin-bottom: 40px; display: block; }
-    </style>
-</head>
-<body>
+// Handle successful payment
+bot.on('pre_checkout_query', (query) => {
+  bot.answerPreCheckoutQuery(query.id, true);
+});
 
-    <div id="boot-screen">
-        <div class="boot-terminal" id="term-out"></div>
-    </div>
+bot.on('successful_payment', async (msg) => {
+  const userId = msg.from.id;
+  const productId = msg.successful_payment.invoice_payload;
+  
+  const prices = {
+    'stars_100': 100,
+    'stars_500': 500,
+    'stars_1000': 1000
+  };
+  
+  const amount = prices[productId];
+  
+  if (amount) {
+    await updateUserBalance(userId, amount);
+    bot.sendMessage(msg.chat.id, 
+      `✅ Платеж успешен!\n\n⭐ Начислено: ${amount} звезд`
+    );
+  }
+});
+*/
 
-    <header>
-        <div class="logo-text">2DUELS</div>
-        <div style="font-size: 10px; color: #444;">ID: 9271704949</div>
-    </header>
+// ============================================
+// WEB APP DATA ENDPOINT
+// ============================================
 
-    <div class="hub-container">
-        <div class="game-node" onclick="openGame('COIN FLIP')">
-            <h3>ОРЕЛ И РЕШКА</h3>
-            <div class="desc">PROBABILITY: 50/50</div>
-        </div>
-        <div class="game-node" onclick="openGame('MINESWEEPER')">
-            <h3>МИНЫ</h3>
-            <div class="desc">SECTOR ANALYSIS REQUIRED</div>
-        </div>
-        <div class="game-node" onclick="openGame('ROULETTE')">
-            <h3>РУССКАЯ РУЛЕТКА</h3>
-            <div class="desc">CHAMBER: 1/6</div>
-        </div>
-        <div class="game-node" onclick="openGame('CRASH')">
-            <h3>КРАШ</h3>
-            <div class="desc">ASCENSION MULTIPLIER</div>
-        </div>
-    </div>
+app.post('/webapp/auth', (req, res) => {
+  const { initData } = req.body;
 
-    <div id="nft-storage">
-        <div class="nft-slot"></div>
-        <div class="nft-slot"></div>
-        <div class="nft-slot"></div>
-    </div>
+  if (!initData) {
+    return res.status(400).json({ error: 'Missing initData' });
+  }
 
-    <div id="game-view">
-        <span class="back-btn" onclick="closeGame()">[ BACK_TO_HUB ]</span>
-        <h1 id="game-title" style="color: var(--neon);"></h1>
-        <div id="game-arena" style="width:100%; height:300px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center;">
-            <div class="loader-circle" style="width:50px; height:50px; border:2px solid var(--neon); border-top:none; border-radius:50%; animation: spin 1s infinite linear;"></div>
-        </div>
-    </div>
+  // Verify Telegram data signature
+  const isValid = verifyTelegramWebAppData(initData, TELEGRAM_BOT_TOKEN);
 
-    <script type="module">
-        // ТВОЙ FIREBASE
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            projectId: "duels-1fb6b",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-        const app = initializeApp(firebaseConfig);
+  if (!isValid) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
 
-        // ТЕРМИНАЛ ЗАГРУЗКИ
-        const lines = [
-            "> BIOS CHECK... OK",
-            "> MEMORY ALLOC... 64KB",
-            "> MOUNTING /SYS... DONE",
-            "> SECURE HANDSHAKE... KEY_OK",
-            "> STARTING 2DUELS UI... READY"
-        ];
-        let i = 0;
-        const term = document.getElementById('term-out');
-        const interval = setInterval(() => {
-            if(i < lines.length) {
-                term.innerHTML += lines[i] + "<br>";
-                i++;
-            } else {
-                clearInterval(interval);
-                setTimeout(() => document.getElementById('boot-screen').style.display = 'none', 500);
-            }
-        }, 400);
+  // Parse user data
+  const params = new URLSearchParams(initData);
+  const userJson = params.get('user');
+  const user = JSON.parse(userJson);
 
-        // ЛОГИКА СТРАНИЦ
-        window.openGame = (title) => {
-            document.getElementById('game-title').innerText = title;
-            document.getElementById('game-view').classList.add('active');
-        };
-        window.closeGame = () => {
-            document.getElementById('game-view').classList.remove('active');
-        };
-    </script>
-    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-</body>
-</html>
+  // Create custom Firebase token
+  admin.auth()
+    .createCustomToken(user.id.toString())
+    .then(customToken => {
+      res.json({ 
+        success: true, 
+        token: customToken,
+        user: user
+      });
+    })
+    .catch(error => {
+      console.error('Error creating custom token:', error);
+      res.status(500).json({ error: 'Token creation failed' });
+    });
+});
+
+// ============================================
+// GAME EVENTS LOGGING
+// ============================================
+
+app.post('/game/event', async (req, res) => {
+  const { userId, gameType, eventType, data } = req.body;
+
+  console.log(`🎮 Game event: ${gameType} - ${eventType} by user ${userId}`);
+
+  try {
+    await db.ref(`events/${userId}/${gameType}`).push({
+      eventType,
+      data,
+      timestamp: Date.now()
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error logging event:', error);
+    res.status(500).json({ error: 'Failed to log event' });
+  }
+});
+
+// ============================================
+// LEADERBOARD
+// ============================================
+
+app.get('/leaderboard', async (req, res) => {
+  try {
+    const usersSnapshot = await db.ref('users').once('value');
+    const users = usersSnapshot.val() || {};
+
+    const leaderboard = Object.entries(users)
+      .map(([userId, userData]) => ({
+        userId,
+        firstName: userData.firstName || 'Unknown',
+        balance: userData.balance || 0
+      }))
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 10);
+
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error('Error getting leaderboard:', error);
+    res.status(500).json({ error: 'Failed to get leaderboard' });
+  }
+});
+
+// ============================================
+// ERROR HANDLING
+// ============================================
+
+bot.on('polling_error', (error) => {
+  console.error('❌ Polling error:', error);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('❌ Unhandled rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught exception:', error);
+});
+
+// ============================================
+// GRACEFUL SHUTDOWN
+// ============================================
+
+process.on('SIGINT', async () => {
+  console.log('\n👋 Shutting down bot...');
+  await bot.stopPolling();
+  process.exit(0);
+});
+
+console.log('✅ Bot initialization complete!');
+console.log(`🌐 Web App URL: ${WEBAPP_URL}`);
+console.log('💬 Ready to receive commands!');
+  "name": "2duels-bot",
+  "version": "1.0.0",
+  "description": "2Duels Tactical Monolith - Telegram Mini App Bot Backend",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "miniapp",
+    "games",
+    "firebase",
+    "2duels"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "firebase-admin": "^12.0.0",
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
+ 
