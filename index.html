@@ -3,358 +3,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2Duels Tactical</title>
+    <title>2Duels PVP Tactical</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg: #0a0a0b;
-            --card: rgba(28, 28, 32, 0.8);
+            --card: rgba(28, 28, 32, 0.9);
             --accent: #00f2ff;
             --pink: #ff007a;
             --text: #ffffff;
-            --dim: #88888b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
-        
-        /* Экраны */
-        .screen { display: none; padding: 60px 20px 100px; height: 100vh; overflow-y: auto; }
-        .screen.active { display: block; }
 
-        /* Навигация как на скринах */
-        .nav-bar {
-            position: fixed; bottom: 0; width: 100%; height: 75px;
-            background: rgba(15, 15, 18, 0.98); backdrop-filter: blur(15px);
-            display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000;
+        body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); margin: 0; overflow: hidden; }
+
+        /* --- PVP DUEL ARENA --- */
+        .duel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            gap: 40px;
         }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; color: var(--dim); font-size: 11px; transition: 0.3s; }
-        .nav-btn.active { color: var(--accent); }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; }
 
-        /* Карточки игр Соло */
-        .game-banner {
-            background: var(--card); border-radius: 20px; padding: 25px;
-            margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid rgba(255,255,255,0.03); position: relative; overflow: hidden;
+        .player-vs {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 24px;
+            font-weight: bold;
         }
-        .game-info h3 { font-size: 20px; margin-bottom: 5px; }
-        .game-info p { font-size: 12px; color: var(--dim); }
 
-        /* Баланс и хедер */
-        header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; background: var(--bg); z-index: 1000; }
-        .online-tag { color: #44ff44; font-size: 12px; display: flex; align-items: center; gap: 5px; }
-        .online-dot { width: 6px; height: 6px; background: #44ff44; border-radius: 50%; box-shadow: 0 0 10px #44ff44; }
+        .avatar {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        /* --- 3D COIN ANIMATION --- */
+        .coin {
+            width: 120px; height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 3s cubic-bezier(0.3, 2, 0.4, 0.8);
+        }
+        .coin div {
+            width: 100%; height: 100%;
+            position: absolute;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; backface-visibility: hidden;
+            border: 4px solid #ffd700;
+            background: radial-gradient(circle, #fcf09f, #ccac00);
+        }
+        .heads { transform: rotateY(0deg); }
+        .tails { transform: rotateY(180deg); }
+
+        /* --- REVOLVER ANIMATION --- */
+        .revolver {
+            width: 150px; height: 150px;
+            background: url('https://cdn-icons-png.flaticon.com/512/575/575402.png') no-repeat center;
+            background-size: contain;
+            transition: transform 0.5s;
+        }
+        .revolver.spin { animation: rotateDrum 1s infinite linear; }
+        @keyframes rotateDrum { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- KNB HANDS --- */
+        .knb-arena { display: flex; gap: 100px; font-size: 80px; }
+        .hand { transition: transform 0.5s; }
+        .hand.shake { animation: shakeHand 0.5s 3; }
+        @keyframes shakeHand { 
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        /* --- BOTTOM NAV --- */
+        .nav {
+            position: fixed; bottom: 0; width: 100%; height: 70px;
+            display: flex; justify-content: space-around; background: #111;
+            align-items: center; border-top: 1px solid #222;
+        }
+        .active-tab { color: var(--accent); }
     </style>
 </head>
 <body>
 
-<header>
-    <div onclick="window.Telegram.WebApp.close()">✕ Закрыть</div>
-    <div class="online-tag"><span class="online-dot"></span> 227 онлайн</div>
-    <div>⋮</div>
-</header>
-
-<div id="pvp" class="screen active">
-    <div id="wheel-container" style="text-align:center;">
-        </div>
+<div id="boot-screen" style="position:fixed; inset:0; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center;">
+    <div style="color:var(--accent); font-size:24px; letter-spacing:5px;" id="loader-text">CONNECTING...</div>
 </div>
 
-<div id="solo" class="screen">
-    <div class="game-banner">
-        <div class="game-info"><h3>Орел и Решка</h3><p>Классическая дуэль 50/50</p></div>
-        <div class="game-icon">🪙</div>
-    </div>
-    <div class="game-banner">
-        <div class="game-info"><h3>Русская Рулетка</h3><p>Один шанс из шести</p></div>
-        <div class="game-icon">🔫</div>
-    </div>
-    <div class="game-banner">
-        <div class="game-info"><h3>КНБ</h3><p>Камень, Ножницы, Бумага</p></div>
-        <div class="game-icon">✌️</div>
-    </div>
-    <div class="game-banner">
-        <div class="game-info"><h3>Чипсы</h3><p>Минное поле 3х3</p></div>
-        <div class="game-icon">💣</div>
-    </div>
-</div>
+<div id="main-ui" style="display:none;">
+    <header style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:var(--accent)">2DUELS PVP</span>
+        <span id="balance">1000 Stars</span>
+    </header>
 
-<nav class="nav-bar">
-    <div class="nav-btn active" onclick="setScreen('pvp', this)">
-        <span class="nav-icon">⚔️</span><span>ПвП</span>
-    </div>
-    <div class="nav-btn" onclick="setScreen('solo', this)">
-        <span class="nav-icon">🎯</span><span>Соло</span>
-    </div>
-    <div class="nav-btn">
-        <span class="nav-icon">🎁</span><span>Розыгрыши</span>
-    </div>
-    <div class="nav-btn" onclick="setScreen('profile', this)">
-        <span class="nav-icon">👤</span><span>Профиль</span>
-    </div>
-</nav>
-
-<script>
-    function setScreen(id, el) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
-</script>
-// --- ИНИЦИАЛИЗАЦИЯ FIREBASE (ТВОЙ КОНФИГ) ---
-const firebaseConfig = {
-    apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-    authDomain: "duels-1fb6b.firebaseapp.com",
-    databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-    projectId: "duels-1fb6b",
-    storageBucket: "duels-1fb6b.firebasestorage.app",
-    messagingSenderId: "745698956226",
-    appId: "1:745698956226:web:27cd811a6633946e85fc5b",
-    measurementId: "G-3BS344MXBP"
-};
-
-// --- МАТЕМАТИКА PVP РУЛЕТКИ (8 ИГРОКОВ) ---
-const wheelContainer = document.getElementById('wheel-container');
-wheelContainer.innerHTML = `
-    <div style="position:relative; width:320px; margin:0 auto;">
-        <div id="wheel-timer" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); 
-             width:80px; height:80px; background:#000; border-radius:50%; display:flex; 
-             align-items:center; justify-content:center; font-weight:bold; z-index:5;">00:00</div>
-        <canvas id="wheelCanvas" width="600" height="600" style="width:100%; height:auto; border-radius:50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);"></canvas>
-        <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:25px solid #fff; z-index:10;"></div>
-    </div>
-    <div id="wheel-info" style="margin-top:20px; font-size:14px; color:var(--dim);">ВСЕГО: <span id="total-bank" style="color:var(--accent)">0.00 TON</span></div>
-`;
-
-const canvas = document.getElementById('wheelCanvas');
-const ctx = canvas.getContext('2d');
-let players = [
-    { name: "@Magikmoney", bet: 1.15, color: "#ff007a", avatar: "🐵" },
-    { name: "@giftgambler", bet: 1.52, color: "#7a00ff", avatar: "👤" },
-    { name: "@x_player", bet: 0.5, color: "#00f2ff", avatar: "⭐️" }
-];
-
-function drawWheel() {
-    const total = players.reduce((sum, p) => sum + p.bet, 0);
-    document.getElementById('total-bank').innerText = total.toFixed(2) + " TON";
-    let startAngle = 0;
-
-    players.forEach(p => {
-        const slice = (p.bet / total) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.moveTo(300, 300);
-        ctx.arc(300, 300, 290, startAngle, startAngle + slice);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-        
-        // Рисуем аватарку в секторе
-        const midAngle = startAngle + slice / 2;
-        ctx.save();
-        ctx.translate(300 + Math.cos(midAngle) * 200, 300 + Math.sin(midAngle) * 200);
-        ctx.font = "40px Arial";
-        ctx.fillText(p.avatar, -20, 20);
-        ctx.restore();
-        
-        startAngle += slice;
-    });
-}
-
-// --- ЛОГИКА СОЛО ИГР ---
-const soloLogic = {
-    coinFlip: (choice) => {
-        const res = Math.random() > 0.5 ? 'Орел' : 'Решка';
-        return res === choice ? "WIN" : "LOSE";
-    },
-    russianRoulette: () => {
-        const chamber = Math.floor(Math.random() * 6);
-        return chamber === 0 ? "DEAD" : "SURVIVED";
-    },
-    knb: (userMove) => {
-        const moves = ['Камень', 'Ножницы', 'Бумага'];
-        const bot = moves[Math.floor(Math.random() * 3)];
-        if (userMove === bot) return "DRAW";
-        if ((userMove === 'Камень' && bot === 'Ножницы') || 
-            (userMove === 'Ножницы' && bot === 'Бумага') || 
-            (userMove === 'Бумага' && bot === 'Камень')) return "WIN";
-        return "LOSE";
-    },
-    chips: (userPick, mines) => {
-        return mines.includes(userPick) ? "BOOM" : "SAFE";
-    }
-};
-
-window.onload = () => { drawWheel(); };
-// --- ДОБАВЛЕНИЕ ЭКРАНА ПРОФИЛЯ В СТРУКТУРУ ---
-const profileScreen = `
-<div id="profile" class="screen">
-    <div class="profile-header" style="text-align:center; margin-bottom:30px;">
-        <div class="avatar-container" style="position:relative; width:90px; height:90px; margin:0 auto 15px;">
-            <img src="https://via.placeholder.com/90" id="user-avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid #333;">
-            <div style="position:absolute; bottom:0; right:0; background:#44ff44; width:15px; height:15px; border-radius:50%; border:2px solid var(--bg);"></div>
-        </div>
-        <h2 id="user-username" style="font-size:22px; letter-spacing:1px;">@xdogum</h2>
-    </div>
-
-    <div class="balance-card" style="background:var(--card); border-radius:24px; padding:20px; margin-bottom:25px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <p style="font-size:12px; color:var(--dim); margin-bottom:5px;">Rolls баланс</p>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="color:#4a90e2; font-size:20px;">💎</span>
-                <span id="user-ton-balance" style="font-size:20px; font-weight:bold;">0 TON</span>
+    <div id="game-zone" class="duel-container">
+        <div class="player-vs">
+            <div class="player">
+                <div class="avatar"></div>
+                <div style="font-size:12px; text-align:center;">Ты</div>
+            </div>
+            <div style="color:var(--pink)">VS</div>
+            <div class="player">
+                <div class="avatar" style="border-color:var(--pink); box-shadow: 0 0 15px var(--pink);"></div>
+                <div style="font-size:12px; text-align:center;">Оппонент</div>
             </div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <button class="action-btn" style="background:#007aff; color:#fff; border:none; padding:12px 20px; border-radius:12px; font-weight:bold;">Пополнить</button>
-            <button class="action-btn" style="background:#222; color:#fff; border:none; padding:12px 15px; border-radius:12px;">🗒</button>
+        
+        <div class="coin" id="coin">
+            <div class="heads">🪙</div>
+            <div class="tails">💰</div>
+        </div>
+        
+        <div id="controls" style="display:flex; gap:15px;">
+            <button onclick="playAction('heads')" style="padding:15px 30px; border-radius:10px; border:none; background:var(--accent); font-weight:bold;">ОРЕЛ</button>
+            <button onclick="playAction('tails')" style="padding:15px 30px; border-radius:10px; border:none; background:var(--pink); font-weight:bold;">РЕШКА</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Скрытие загрузки через 2 секунды
+    setTimeout(() => {
+        document.getElementById('boot-screen').style.display = 'none';
+        document.getElementById('main-ui').style.display = 'block';
+    }, 2000);
+</script>
+// --- CONFIG ---
+const firebaseConfig = {
+    apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+    databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+};
+
+// Инициализация (убедись, что firebase подключен в head через CDN)
+// const db = firebase.database(); 
+
+let currentDuelId = null;
+let mySide = null; // 'player1' или 'player2'
+
+// --- ЛОГИКА ОРЕЛ И РЕШКА PVP ---
+function startCoinFlipPVP(duelId) {
+    const coin = document.getElementById('coin');
+    const controls = document.getElementById('controls');
+    
+    // Эмуляция получения данных от оппонента через Firebase
+    console.log("Ожидание выбора оппонента в дуэли:", duelId);
+    
+    window.playAction = function(side) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        controls.style.display = 'none'; // Убираем кнопки после выбора
+        
+        // Тут отправляем выбор в Firebase: db.ref('duels/' + duelId).update({ p1_choice: side });
+        
+        // Анимация вращения (имитация результата)
+        const result = Math.random() > 0.5 ? 'heads' : 'tails';
+        const extraSpins = 1800; // 5 полных оборотов
+        const finalDeg = result === 'heads' ? extraSpins : extraSpins + 180;
+        
+        coin.style.transform = `rotateY(${finalDeg}deg)`;
+        
+        setTimeout(() => {
+            alert(result === side ? "ТЫ ВЫИГРАЛ!" : "ТЫ ПРОИГРАЛ!");
+            location.reload(); // Сброс для новой игры
+        }, 3500);
+    };
+}
+
+// --- ЛОГИКА РУССКАЯ РУЛЕТКА PVP ---
+function initRussianRoulette() {
+    const gameZone = document.getElementById('game-zone');
+    gameZone.innerHTML = `
+        <div class="player-vs">
+            <div id="p1-status">Твой ход</div>
+            <div class="revolver" id="drum"></div>
+            <div id="p2-status">Ждет...</div>
+        </div>
+        <button id="trigger-btn" onclick="pullTrigger()" style="padding:20px; background:var(--pink); border:none; border-radius:50%; width:100px; height:100px; font-weight:bold; color:#fff; box-shadow: 0 0 20px var(--pink);">ОГОНЬ</button>
+    `;
+
+    let cylinder = [0, 0, 0, 0, 0, 1]; // 1 - пуля
+    cylinder = cylinder.sort(() => Math.random() - 0.5);
+    let currentStep = 0;
+
+    window.pullTrigger = function() {
+        const drum = document.getElementById('drum');
+        drum.style.transform = 'scale(1.2)';
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('warning');
+
+        setTimeout(() => {
+            drum.style.transform = 'scale(1)';
+            if (cylinder[currentStep] === 1) {
+                drum.style.filter = 'hue-rotate(90deg) brightness(0.5)';
+                alert("БАБАХ! Ты проиграл.");
+                location.reload();
+            } else {
+                alert("КЛИК. Тебе повезло. Ход оппонента...");
+                currentStep++;
+                // Тут через Firebase передаем ход: db.ref('duels/id').update({ turn: 'p2' });
+            }
+        }, 300);
+    };
+}
+
+// --- КНБ PVP (ОДНОВРЕМЕННО) ---
+function initKNB() {
+    const gameZone = document.getElementById('game-zone');
+    gameZone.innerHTML = `
+        <div class="knb-arena">
+            <div id="my-hand" class="hand">✊</div>
+            <div id="opp-hand" class="hand">✊</div>
+        </div>
+        <div id="knb-controls" style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="knbChoice('✊')">✊</button>
+            <button onclick="knbChoice('✋')">✋</button>
+            <button onclick="knbChoice('✌️')">✌️</button>
+        </div>
+    `;
+
+    window.knbChoice = function(choice) {
+        document.getElementById('my-hand').classList.add('shake');
+        document.getElementById('opp-hand').classList.add('shake');
+        document.getElementById('knb-controls').style.display = 'none';
+
+        setTimeout(() => {
+            document.getElementById('my-hand').classList.remove('shake');
+            document.getElementById('opp-hand').classList.remove('shake');
+            document.getElementById('my-hand').innerText = choice;
+            
+            // Имитация хода оппонента
+            const hands = ['✊', '✋', '✌️'];
+            const oppChoice = hands[Math.floor(Math.random() * 3)];
+            document.getElementById('opp-hand').innerText = oppChoice;
+            
+            // Логика победы...
+        }, 1500);
+    };
+}
+// --- HTML СТРУКТУРА ПРОФИЛЯ ---
+const profileContent = `
+<div id="screen-profile" class="screen">
+    <div style="text-align:center; margin-bottom:25px;">
+        <div style="position:relative; width:100px; height:100px; margin:0 auto 15px;">
+            <div id="avatar-glow" style="position:absolute; inset:-5px; border-radius:50%; background:linear-gradient(45deg, var(--accent), var(--pink)); filter:blur(10px); opacity:0.6;"></div>
+            <img src="https://via.placeholder.com/100" id="main-avatar" style="position:relative; width:100%; height:100%; border-radius:50%; border:3px solid var(--bg); object-fit:cover;">
+        </div>
+        <h2 id="p-username" style="font-size:24px; margin-bottom:5px;">@operator_2d</h2>
+        <p id="p-rank" style="font-size:12px; color:var(--accent); letter-spacing:2px;">RANK: NOVICE</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+        <div class="stat-mini-card" style="background:var(--card); padding:15px; border-radius:15px; text-align:center;">
+            <p style="font-size:10px; color:var(--dim);">ДУЭЛЕЙ</p>
+            <h4 id="stat-total">0</h4>
+        </div>
+        <div class="stat-mini-card" style="background:var(--card); padding:15px; border-radius:15px; text-align:center;">
+            <p style="font-size:10px; color:var(--dim);">WIN RATE</p>
+            <h4 id="stat-wr" style="color:#44ff44;">0%</h4>
         </div>
     </div>
 
-    <div class="menu-list" style="display:flex; flex-direction:column; gap:10px;">
-        <div class="menu-item" onclick="openInventory()">
-            <span class="menu-icon">🎁</span>
-            <span class="menu-label">Инвентарь подарков</span>
-            <span class="menu-badge" style="background:var(--pink);">0</span>
-            <span class="menu-arrow">❯</span>
-        </div>
-        <div class="menu-item">
-            <span class="menu-icon">📜</span>
-            <span class="menu-label">Задания</span>
-            <span class="menu-badge" style="background:#ff9800;">0 / 22</span>
-            <span class="menu-arrow">❯</span>
-        </div>
-        <div class="menu-item">
-            <span class="menu-icon">💎</span>
-            <span class="menu-label">Рефералы</span>
-            <span class="menu-arrow">❯</span>
-        </div>
-        <div class="menu-item">
-            <span class="menu-icon">💰</span>
-            <span class="menu-label">Стейкинг</span>
-            <span class="menu-arrow">❯</span>
-        </div>
+    <h3 style="font-size:16px; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">🎁</span> МОЙ ИНВЕНТАРЬ
+    </h3>
+    <div id="inventory-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:30px;">
+        <div class="inv-slot-empty"></div>
+        <div class="inv-slot-empty"></div>
+        <div class="inv-slot-empty"></div>
+    </div>
+
+    <div class="menu-list">
+        <div class="menu-item"><span>📜</span> Задания <span class="badge">HOT</span></div>
+        <div class="menu-item"><span>💎</span> Рефералы</div>
+        <div class="menu-item"><span>⚙️</span> Настройки</div>
     </div>
 </div>
 `;
 
-// Инъекция в HTML
-document.body.insertAdjacentHTML('beforeend', profileScreen);
+document.body.insertAdjacentHTML('beforeend', profileContent);
 
-// --- СТИЛИ ДЛЯ МЕНЮ ПРОФИЛЯ ---
-const profileStyles = `
+// --- СТИЛИ ДЛЯ ИНВЕНТАРЯ ---
+const invStyles = `
+    .inv-slot-empty {
+        aspect-ratio: 1/1;
+        background: rgba(255,255,255,0.02);
+        border: 1px dashed rgba(255,255,255,0.1);
+        border-radius: 12px;
+    }
+    .nft-card {
+        aspect-ratio: 1/1;
+        background: var(--card);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        border: 1px solid rgba(255,255,255,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+    .nft-rarity {
+        position: absolute;
+        bottom: 0; width: 100%; height: 4px;
+    }
+    .rarity-legendary { background: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+    .rarity-epic { background: #a200ff; }
+    .rarity-rare { background: #007aff; }
+
     .menu-item {
         background: var(--card);
-        padding: 18px 20px;
-        border-radius: 18px;
+        padding: 16px;
+        border-radius: 15px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
-        transition: 0.2s;
-        cursor: pointer;
+        gap: 15px;
+        font-size: 14px;
+        border: 1px solid rgba(255,255,255,0.03);
     }
-    .menu-item:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
-    .menu-icon { font-size: 20px; margin-right: 15px; }
-    .menu-label { flex-grow: 1; font-size: 15px; font-weight: 500; }
-    .menu-badge {
+    .badge {
+        background: var(--pink);
         padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 11px;
-        margin-right: 10px;
-        font-weight: bold;
+        border-radius: 8px;
+        font-size: 10px;
+        margin-left: auto;
     }
-    .menu-arrow { color: #333; font-size: 14px; }
 `;
-const styleSheet = document.createElement("style");
-styleSheet.innerText = profileStyles;
-document.head.appendChild(styleSheet);
+const sheet = document.createElement('style');
+sheet.innerText = invStyles;
+document.head.appendChild(sheet);
 
-// --- ЛОГИКА ИНВЕНТАРЯ ---
-function openInventory() {
-    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-    alert("Инвентарь пуст. Выигрывайте дуэли, чтобы получить NFT!");
-}
-// --- ЭКРАН ЗАГРУЗКИ (TERMINAL BOOT) ---
-const bootHTML = `
-<div id="boot-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'JetBrains Mono', monospace; padding:20px;">
-    <div id="boot-logo" style="font-size:40px; font-weight:bold; color:var(--accent); margin-bottom:30px; opacity:0; transform:scale(0.8); transition:2s;">2DUELS</div>
-    <div id="boot-loader" style="width:200px; height:2px; background:#111; position:relative; margin-bottom:20px;">
-        <div id="boot-bar" style="position:absolute; top:0; left:0; height:100%; width:0%; background:var(--accent); box-shadow:0 0 10px var(--accent); transition:0.5s;"></div>
-    </div>
-    <div id="boot-logs" style="font-size:10px; color:#444; text-align:center; height:50px; line-height:1.5;"></div>
-</div>
-`;
+// --- ЛОГИКА ЗАПОЛНЕНИЯ ИНВЕНТАРЯ ---
+function loadUserInventory() {
+    const grid = document.getElementById('inventory-grid');
+    const items = [
+        { icon: "🗡️", name: "Cyber Blade", rarity: "legendary" },
+        { icon: "🛡️", name: "Neon Shield", rarity: "rare" }
+    ];
 
-document.body.insertAdjacentHTML('afterbegin', bootHTML);
+    if(items.length > 0) grid.innerHTML = ""; // Очистка пустых слотов
 
-// --- ЛОГИКА ЗАГРУЗКИ ---
-const logs = [
-    "INITIALIZING KERNEL...",
-    "CONNECTING TO FIREBASE NODE...",
-    "SYNCING PVP ENGINE...",
-    "LOADING ASSETS: WHEEL, COIN, KNIFE...",
-    "ACCESS GRANTED."
-];
-
-function startBoot() {
-    const logEl = document.getElementById('boot-logs');
-    const bar = document.getElementById('boot-bar');
-    const logo = document.getElementById('boot-logo');
-    let step = 0;
-
-    logo.style.opacity = "1";
-    logo.style.transform = "scale(1)";
-
-    const interval = setInterval(() => {
-        if (step < logs.length) {
-            logEl.innerHTML = logs[step];
-            bar.style.width = ((step + 1) / logs.length) * 100 + "%";
-            step++;
-        } else {
-            clearInterval(interval);
-            setTimeout(() => {
-                document.getElementById('boot-screen').style.opacity = "0";
-                setTimeout(() => {
-                    document.getElementById('boot-screen').style.display = "none";
-                    // Инициализация Telegram WebApp Haptics
-                    if(window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                }, 500);
-            }, 800);
-        }
-    }, 800);
-}
-
-// --- ВИЗУАЛИЗАЦИЯ ИКОНОК ИГР (SVG/CSS) ---
-function injectGameIcons() {
-    const banners = document.querySelectorAll('.game-banner');
-    const colors = ['#ffcc00', '#ff3333', '#00ffcc', '#ff00ff'];
-    
-    banners.forEach((banner, i) => {
-        banner.style.borderLeft = `4px solid ${colors[i]}`;
-        // Добавляем эффект свечения при наведении/клике
-        banner.addEventListener('touchstart', () => {
-            banner.style.boxShadow = `0 0 20px ${colors[i]}44`;
-        });
-        banner.addEventListener('touchend', () => {
-            banner.style.boxShadow = "none";
-        });
+    items.forEach(item => {
+        const card = `
+            <div class="nft-card" onclick="alert('${item.name}')">
+                ${item.icon}
+                <div class="nft-rarity rarity-${item.rarity}"></div>
+            </div>
+        `;
+        grid.insertAdjacentHTML('beforeend', card);
     });
 }
 
-// --- ФИНАЛЬНАЯ СКЛЕЙКА (APP START) ---
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Запуск загрузки
-    startBoot();
+// Запуск при загрузке
+setTimeout(loadUserInventory, 1000);
+// --- ЛОГИКА МАГАЗИНА (MARKET) ---
+const marketHTML = `
+<div id="screen-market" class="screen" style="display:none;">
+    <h2 style="margin-bottom:20px; font-size:22px;">МАРКЕТ СКИНОВ</h2>
     
-    // 2. Отрисовка рулетки (из части 2)
-    if(typeof drawWheel === "function") drawWheel();
-    
-    // 3. Иконки и стили
-    injectGameIcons();
-    
-    // 4. Твоя система звезд (место для кода)
-    console.log("System ready for Stars integration...");
-});
+    <div class="market-grid" style="display:grid; grid-template-columns:1fr; gap:15px;">
+        <div class="skin-card legendary" style="background:var(--card); border-radius:20px; padding:20px; border:1px solid #ffd700; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:10px; right:10px; background:#ffd700; color:#000; font-size:10px; padding:2px 8px; border-radius:5px; font-weight:bold;">LEGENDARY</div>
+            
+            <div style="display:flex; align-items:center; gap:20px;">
+                <div style="font-size:45px; filter: drop-shadow(0 0 10px #ffd700);">🔫</div>
+                <div>
+                    <h3 style="color:#ffd700;">Gold Deagle</h3>
+                    <p style="font-size:11px; color:var(--dim);">Эксклюзив для Русской Рулетки</p>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:18px;">⭐️</span>
+                    <span id="deagle-price" style="font-weight:bold; font-size:18px;">XTR</span> 
+                </div>
+                <button onclick="buySkin('Gold Deagle')" style="background:#ffd700; color:#000; border:none; padding:10px 25px; border-radius:12px; font-weight:bold; cursor:pointer;">КУПИТЬ</button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
 
-// Закрываем все открытые ранее теги
-</script>
-</body>
-</html>
+// Инъекция маркета в документ
+document.body.insertAdjacentHTML('beforeend', marketHTML);
+
+// --- ЛОГИКА ПОКУПКИ ---
+function buySkin(skinName) {
+    window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    
+    // Вызов Telegram Stars (платежка)
+    // Тут будет твой вызов API, когда цену поставишь
+    
+    alert(`Вы приобрели ${skinName}! Скин добавлен в инвентарь.`);
+    
+    // Добавляем в инвентарь (визуально для теста)
+    const invGrid = document.getElementById('inventory-grid');
+    if(invGrid) {
+        const newSkin = `
+            <div class="nft-card" style="border:1px solid #ffd700;">
+                🔫
+                <div class="nft-rarity rarity-legendary"></div>
+            </div>
+        `;
+        invGrid.insertAdjacentHTML('afterbegin', newSkin);
+    }
+}
+
+// Стили для карточки скина
+const marketStyle = document.createElement('style');
+marketStyle.innerText = `
+    .skin-card.legendary::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+        animation: shine 3s infinite;
+    }
+    @keyframes shine {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+`;
+document.head.appendChild(marketStyle);
+// --- ИГРА ЧИПСЫ (МИНЫ) 1 на 1 ---
+function initChipsPVP() {
+    const gameZone = document.getElementById('game-zone');
+    gameZone.innerHTML = `
+        <div style="text-align:center; margin-bottom:15px;">ХОД: <span id="current-turn" style="color:var(--accent)">ТВОЙ</span></div>
+        <div id="mines-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; width:250px; margin:0 auto;">
+            ${Array(9).fill().map((_, i) => `<div class="mine-cell" onclick="openCell(${i})" id="cell-${i}">?</div>`).join('')}
+        </div>
+    `;
+
+    let mines = [Math.floor(Math.random() * 9)]; // Одна мина на поле 3х3
+
+    window.openCell = function(idx) {
+        const cell = document.getElementById(`cell-${idx}`);
+        if(cell.classList.contains('opened')) return;
+
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        cell.classList.add('opened');
+
+        if(mines.includes(idx)) {
+            cell.innerHTML = "💥";
+            cell.style.background = var(--pink);
+            alert("БАБАХ! Ты проиграл чипсы.");
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            cell.innerHTML = "💎";
+            cell.style.background = "#44ff4433";
+            cell.style.color = "#44ff44";
+            // Передача хода оппоненту через Firebase
+            document.getElementById('current-turn').innerText = "ОППОНЕНТ";
+        }
+    };
+}
+
+// --- СТИЛИ ДЛЯ МИН ---
+const chipStyles = `
+    .mine-cell {
+        aspect-ratio: 1/1; background: var(--card); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05);
+        cursor: pointer; transition: 0.3s;
+    }
+    .mine-cell.opened { cursor: default; border: none; }
+`;
+const s = document.createElement('style'); s.innerText = chipStyles; document.head.appendChild(s);
+
+// --- АНИМАЦИЯ ВХОДА (LOGO BOOT) ---
+function runFinalBoot() {
+    const loader = document.getElementById('boot-screen');
+    const txt = document.getElementById('loader-text');
+    
+    const messages = ["SYSTEM SCAN...", "PVP ENGINE ON...", "LOADED."];
+    let i = 0;
+    
+    const interval = setInterval(() => {
+        txt.innerText = messages[i];
+        i++;
+        if(i >= messages.length) {
+            clearInterval(interval);
+            loader.style.transition = "opacity 1s, transform 1s";
+            loader.style.opacity = "0";
+            loader.style.transform = "scale(1.2)";
+            setTimeout(() => {
+                loader.style.display = 'none';
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }, 1000);
+        }
+    }, 1000);
+}
+
+// --- НАВИГАЦИЯ ---
+function setScreen(name) {
+    document.querySelectorAll('.screen').forEach(scr => scr.style.display = 'none');
+    const target = document.getElementById('screen-' + name) || document.getElementById(name);
+    if(target) target.style.display = 'block';
+    
+    // Подсветка кнопок
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+    event.currentTarget.classList.add('active-tab');
+}
+
+// ФИНАЛЬНЫЙ СТАРТ
+runFinalBoot();
+// initChipsPVP(); // Разкомментируй, если хочешь сразу мины
