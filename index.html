@@ -101,29 +101,7 @@ export default function UltimateHub() {
 }
 
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-  authDomain: "duels-1fb6b.firebaseapp.com",
-  databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-  projectId: "duels-1fb6b",
-  storageBucket: "duels-1fb6b.firebasestorage.app",
-  messagingSenderId: "745698956226",
-  appId: "1:745698956226:web:27cd811a6633946e85fc5b",
-  measurementId: "G-3BS344MXBP"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-/**
  * КОРНЕВОЙ МОДУЛЬ СИСТЕМЫ ОПЛАТЫ (STARS_ENGINE_V1)
  * здесь прописана логика работы с валютой XTR
  */
@@ -188,8 +166,28 @@ bot.on("message:successful_payment", async (ctx) => {
     if (payment.currency === "XTR") {
         console.log(`✅ КАЙФ! зачислено ${payment.total_amount} звезд юзеру ${ctx.from.id}`);
         // тут вызываешь свою функцию из 4000-строчного файла для обновления кошелька
-        // updatePlayerWallet(ctx.from.id, payment.total_amount);
-    }
-});
+        // updatePlayerWallet(ctx.from.id, payment.total_amount););
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-bot.start();
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+  authDomain: "duels-1fb6b.firebaseapp.com",
+  databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+  projectId: "duels-1fb6b",
+  storageBucket: "duels-1fb6b.firebasestorage.app",
+  messagingSenderId: "745698956226",
+  appId: "1:745698956226:web:27cd811a6633946e85fc5b",
+  measurementId: "G-3BS344MXBP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+/**
+                
