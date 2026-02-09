@@ -3,227 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2DUELS: HYBRID OS</title>
+    <title>2DUELS: ELITE OS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Montserrat:wght@300;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --accent: #00f2ff; --bg: #06070a; --panel: rgba(255,255,255,0.03); --border: rgba(0,242,255,0.15); --red: #ff3b3b; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root { --accent: #00f2ff; --bg: #050608; --card: rgba(255,255,255,0.06); --red: #ff3b3b; --gold: #ff9500; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
 
-        /* --- MONOLITH LOADER --- */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .boot-box { width: 260px; border: 1px solid var(--accent); padding: 15px; border-radius: 12px; font-family: 'Orbitron'; font-size: 8px; color: var(--accent); }
-
         /* --- UI SHELL --- */
-        .app { display: none; height: 100vh; flex-direction: column; opacity: 0; transition: 1s; }
-        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(0,242,255,0.07), transparent); }
-        .pfp { width: 45px; height: 45px; border-radius: 14px; border: 1px solid var(--accent); overflow: hidden; box-shadow: 0 0 15px rgba(0,242,255,0.2); }
-        .pfp img { width: 100%; height: 100%; object-fit: cover; }
+        .app-container { height: 100vh; display: flex; flex-direction: column; background: radial-gradient(circle at top right, rgba(0,242,255,0.05), transparent); }
+        
+        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .user-block { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(0,242,255,0.2); overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .stars-badge { background: linear-gradient(90deg, var(--gold), #ffcc00); color: #000; padding: 6px 14px; border-radius: 20px; font-weight: 900; font-size: 13px; display: flex; align-items: center; gap: 5px; }
 
-        .stats-bar { display: flex; gap: 10px; padding: 0 20px; margin-top: 10px; }
-        .stat-card { flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 12px; }
-        .stat-val { font-family: 'Orbitron'; font-size: 14px; color: #ff9500; }
-
-        /* --- CONTENT --- */
-        .scroll-area { flex: 1; overflow-y: auto; padding: 20px 20px 120px; }
-        .game-card { 
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
-            border-radius: 28px; border: 1px solid var(--border); padding: 20px; 
-            margin-bottom: 15px; display: flex; align-items: center; gap: 20px; transition: 0.3s;
+        /* --- LOBBY SYSTEM --- */
+        .lobby { flex: 1; padding: 0 20px; overflow-y: auto; }
+        .section-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.3); letter-spacing: 2px; margin: 20px 0 10px; text-transform: uppercase; }
+        
+        .room-item { 
+            background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; 
+            padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px); animation: slideIn 0.4s ease-out;
         }
-        .game-card:active { transform: scale(0.97); background: rgba(0,242,255,0.05); }
-        .icon-box { width: 55px; height: 55px; background: #111; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; border: 1px solid rgba(255,255,255,0.05); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- MINES 3x3 GRID --- */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(6,7,10,0.98); z-index: 1000; backdrop-filter: blur(20px); flex-direction: column; padding: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 40px auto; width: 100%; max-width: 320px; }
-        .tile { aspect-ratio: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .tile.active-mine { border-color: var(--red); background: rgba(255,0,0,0.1); }
-        .tile.open { transform: rotateY(180deg); background: rgba(0,242,255,0.1); border-color: var(--accent); }
+        .btn-action { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 12px; font-family: 'Orbitron'; }
+        .btn-main { width: 100%; background: #fff; color: #000; border: none; padding: 20px; border-radius: 20px; font-weight: 900; font-family: 'Orbitron'; margin-top: 10px; box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
 
-        /* --- NAVIGATION --- */
-        .nav { position: fixed; bottom: 25px; left: 20px; right: 20px; background: rgba(15,16,22,0.9); border: 1px solid var(--border); border-radius: 30px; padding: 15px; display: flex; justify-content: space-around; backdrop-filter: blur(10px); }
-        .nav-item { opacity: 0.3; transition: 0.3s; font-size: 8px; font-weight: 800; text-align: center; }
+        /* --- GAME ENGINE SCREENS --- */
+        .screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; flex-direction: column; padding: 20px; }
+        .grid-mines { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 30px auto; width: 100%; max-width: 340px; }
+        .tile { 
+            aspect-ratio: 1; background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; 
+            display: flex; align-items: center; justify-content: center; font-size: 32px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .tile.selected { border-color: var(--red); background: rgba(255,59,59,0.1); box-shadow: inset 0 0 20px rgba(255,59,59,0.1); }
+        .tile.open { background: rgba(0,242,255,0.1); border-color: var(--accent); transform: rotateY(180deg); }
+
+        /* --- RPS ANIMATION --- */
+        .rps-arena { display: flex; justify-content: space-around; align-items: center; height: 200px; margin-top: 50px; }
+        .hand { font-size: 80px; transition: 0.3s; filter: drop-shadow(0 0 15px var(--accent)); }
+        .shake { animation: handShake 0.5s infinite; }
+        @keyframes handShake { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-30px) rotate(-10deg); } }
+
+        /* --- NAV BAR --- */
+        .nav-bar { padding: 20px; display: flex; justify-content: space-around; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { opacity: 0.4; font-size: 10px; font-weight: 800; text-align: center; }
         .nav-item.active { opacity: 1; color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="boot-box" id="boot-text"></div>
+<div class="app-container" id="lobby-screen">
+    <div class="header">
+        <div class="user-block">
+            <div class="avatar"><img id="u-pfp" src=""></div>
+            <div>
+                <div id="u-name" style="font-weight: 800; font-size: 15px;">AGENT</div>
+                <div style="font-size: 9px; color: var(--accent); font-family: 'Orbitron';">RANK: ELITE</div>
+            </div>
+        </div>
+        <div class="stars-badge">⭐ <span id="u-balance">1000</span></div>
     </div>
 
-    <div class="app" id="main-app">
-        <div class="header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="pfp"><img id="u-pfp" src=""></div>
-                <div>
-                    <div id="u-name" style="font-weight: 800; font-size: 14px;">AGENT</div>
-                    <div style="font-size: 8px; color: var(--accent); font-family: 'Orbitron';">LVL 01 | NOVICE</div>
-                </div>
-            </div>
-            <div style="text-align: right; opacity: 0.3; font-size: 9px;">SECURE_ID: <span id="u-id">000</span></div>
+    <div class="lobby">
+        <div class="section-label">Active Duels</div>
+        <div id="rooms-list">
+            <div style="text-align: center; opacity: 0.2; margin-top: 50px;">SEARCHING FOR TARGETS...</div>
         </div>
-
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div style="font-size: 8px; color: #555;">STARS BALANCE</div>
-                <div class="stat-val">⭐ <span id="stars">1000</span></div>
-            </div>
-            <div class="stat-card">
-                <div style="font-size: 8px; color: #555;">TON ASSETS</div>
-                <div class="stat-val" style="color: #0088cc;">💎 0.00</div>
-            </div>
-        </div>
-
-        <div class="scroll-area">
-            <div style="font-size: 9px; letter-spacing: 3px; color: #333; margin: 20px 0 10px;">BATTLE_MODULES</div>
-            
-            <div class="game-card" onclick="openMines()">
-                <div class="icon-box">💣</div>
-                <div class="info">
-                    <h3 style="font-family: 'Orbitron'; font-size: 13px; margin: 0;">MINES 1VS1</h3>
-                    <p style="font-size: 9px; opacity: 0.4; margin-top: 4px;">SET TRAPS. BET STARS. WIN.</p>
-                </div>
-            </div>
-
-            <div class="game-card" onclick="alert('SOON')">
-                <div class="icon-box">⚔️</div>
-                <div class="info">
-                    <h3 style="font-family: 'Orbitron'; font-size: 13px; margin: 0;">RPS BATTLE</h3>
-                    <p style="font-size: 9px; opacity: 0.4; margin-top: 4px;">DUEL WITH REAL PLAYERS</p>
-                </div>
-            </div>
-
-            <div class="game-card">
-                <div class="icon-box">🏦</div>
-                <div class="info">
-                    <h3 style="font-family: 'Orbitron'; font-size: 13px; margin: 0;">VAULT / NFT</h3>
-                    <p style="font-size: 9px; opacity: 0.4; margin-top: 4px;">STORAGE FOR COLLECTIBLES</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="nav">
-            <div class="nav-item active">HOME</div>
-            <div class="nav-item">LOBBY</div>
-            <div class="nav-item">WALLET</div>
-            <div class="nav-item">OS</div>
-        </div>
+        
+        <div class="section-label">Quick Actions</div>
+        <button class="btn-main" onclick="initCreateRoom()">CREATE CUSTOM DUEL</button>
+        <button class="btn-main" style="background: var(--card); color: #fff; border: 1px solid var(--border);" onclick="tg.openTelegramLink('https://t.me/share/url?url=t.me/your_bot')">INVITE FRIEND</button>
     </div>
 
-    <div id="mines-modal" class="modal">
-        <div style="display:flex; justify-content:space-between; width:100%; font-family:'Orbitron'; font-size:10px;">
-            <div style="color:var(--accent);">MINES_PROTOCOL</div>
-            <div onclick="closeMines()" style="color:var(--red);">[EXIT]</div>
-        </div>
-        <div id="m-status" style="text-align:center; margin-top:30px; font-size:11px; color:#555;">PLACE 3 MINES FOR OPPONENT</div>
-        <div class="grid-3" id="m-grid"></div>
-        <button id="m-btn" style="display:none; width:100%; background:var(--accent); border:none; padding:18px; border-radius:15px; font-family:'Orbitron'; font-weight:900;" onclick="confirmMines()">INITIALIZE BATTLE</button>
+    <div class="nav-bar">
+        <div class="nav-item active">BATTLE</div>
+        <div class="nav-item">NFT BANK</div>
+        <div class="nav-item">OS</div>
     </div>
+</div>
 
-    <script>
-        // --- FIREBASE CONFIG (INSERT YOURS) ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-        };
-        // firebase.initializeApp(firebaseConfig);
-        // const db = firebase.database();
+<div id="mines-screen" class="screen">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-family: 'Orbitron'; font-size: 10px; color: var(--accent);">MINES_v5_OS</div>
+        <div onclick="exitGame()" style="color: var(--red); font-weight: 900; font-size: 12px;">[ABORT]</div>
+    </div>
+    <div id="game-status" style="text-align: center; margin-top: 40px; font-family: 'Orbitron'; color: var(--accent); font-size: 12px;">SET 3 TRAPS</div>
+    <div class="grid-mines" id="m-grid"></div>
+    <button id="m-btn" style="display:none; width:100%; background:var(--accent); color:#000; border:none; padding:20px; border-radius:20px; font-family:'Orbitron'; font-weight:900;" onclick="sendTraps()">INITIALIZE BATTLE</button>
+</div>
 
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+<script>
+    // --- FIREBASE CONFIG (Твои ключи) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+        authDomain: "duels-1fb6b.firebaseapp.com",
+        databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+        projectId: "duels-1fb6b",
+        storageBucket: "duels-1fb6b.firebasestorage.app",
+        messagingSenderId: "745698956226",
+        appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+    };
 
-        // --- BOOT LOGIC ---
-        const logs = ["BIOS CHECK...", "RAM OK", "NET CONNECTING...", "FIREBASE SYNC...", "AGENT READY"];
-        let lIdx = 0;
-        function doBoot() {
-            if(lIdx < logs.length) {
-                document.getElementById('boot-text').innerHTML += `> ${logs[lIdx]}<br>`;
-                lIdx++; setTimeout(doBoot, 300);
-            } else {
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    document.getElementById('main-app').style.display = 'flex';
-                    setTimeout(() => document.getElementById('main-app').style.opacity = '1', 50);
-                }, 600);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+    let user = tg.initDataUnsafe?.user || { id: "test_" + Math.random(), first_name: "DEV_PLAYER" };
+    let currentRoom = null;
+    let myTraps = [];
+
+    // Setup UI
+    document.getElementById('u-name').innerText = user.first_name.toUpperCase();
+    document.getElementById('u-pfp').src = user.photo_url || 'https://via.placeholder.com/100';
+
+    // --- LOBBY REALTIME ---
+    db.ref('rooms').on('value', (snap) => {
+        const list = document.getElementById('rooms-list');
+        list.innerHTML = '';
+        const rooms = snap.val();
+        if(!rooms) {
+            list.innerHTML = '<div style="text-align:center; opacity:0.1; margin-top:50px;">NO ROOMS FOUND</div>';
+            return;
+        }
+        
+        Object.keys(rooms).forEach(id => {
+            if(rooms[id].status === 'waiting' && rooms[id].creatorId != user.id) {
+                const room = document.createElement('div');
+                room.className = 'room-item';
+                room.innerHTML = `
+                    <div>
+                        <div style="font-weight:800; font-size:14px;">${rooms[id].creatorName}</div>
+                        <div style="color:var(--gold); font-size:10px; font-weight:700;">BET: 100 STARS</div>
+                    </div>
+                    <button class="btn-action" onclick="joinRoom('${id}')">BATTLE</button>
+                `;
+                list.appendChild(room);
             }
+        });
+    });
+
+    // --- GAME LOGIC ---
+    function initCreateRoom() {
+        currentRoom = 'room_' + Date.now();
+        db.ref('rooms/' + currentRoom).set({
+            creatorId: user.id,
+            creatorName: user.first_name,
+            status: 'waiting',
+            createdAt: Date.now()
+        });
+        openMines();
+    }
+
+    function joinRoom(id) {
+        currentRoom = id;
+        db.ref('rooms/' + id).update({
+            opponentId: user.id,
+            opponentName: user.first_name,
+            status: 'playing'
+        });
+        openMines();
+    }
+
+    function openMines() {
+        document.getElementById('mines-screen').style.display = 'flex';
+        renderMinesGrid();
+    }
+
+    function renderMinesGrid() {
+        const grid = document.getElementById('m-grid');
+        grid.innerHTML = '';
+        myTraps = [];
+        document.getElementById('game-status').innerText = "SET 3 TRAPS FOR ENEMY";
+        
+        for(let i=0; i<9; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.onclick = () => {
+                if(myTraps.includes(i)) {
+                    myTraps = myTraps.filter(t => t !== i);
+                    tile.classList.remove('selected'); tile.innerHTML = '';
+                } else if(myTraps.length < 3) {
+                    myTraps.push(i);
+                    tile.classList.add('selected'); tile.innerHTML = '💣';
+                    tg.HapticFeedback.impactOccurred('medium');
+                }
+                document.getElementById('m-btn').style.display = (myTraps.length === 3) ? 'block' : 'none';
+            };
+            grid.appendChild(tile);
         }
-        doBoot();
+    }
 
-        // --- USER INFO ---
-        if(tg.initDataUnsafe?.user) {
-            const u = tg.initDataUnsafe.user;
-            document.getElementById('u-name').innerText = u.first_name.toUpperCase();
-            document.getElementById('u-id').innerText = u.id;
-            document.getElementById('u-pfp').src = u.photo_url || 'https://via.placeholder.com/100';
-        }
-
-        // --- MINES LOGIC ---
-        let myMines = [];
-        let enemyMines = [];
-        let isBattle = false;
-
-        function openMines() {
-            document.getElementById('mines-modal').style.display = 'flex';
-            renderSetup();
-        }
-
-        function closeMines() { document.getElementById('mines-modal').style.display = 'none'; }
-
-        function renderSetup() {
-            isBattle = false; myMines = [];
-            const grid = document.getElementById('m-grid');
-            grid.innerHTML = '';
-            document.getElementById('m-status').innerText = "PLACE 3 MINES FOR OPPONENT";
-            document.getElementById('m-btn').style.display = 'none';
-
-            for(let i=0; i<9; i++) {
-                const t = document.createElement('div');
-                t.className = 'tile';
-                t.onclick = () => {
-                    if(isBattle) return;
-                    if(myMines.includes(i)) {
-                        myMines = myMines.filter(x => x !== i);
-                        t.classList.remove('active-mine'); t.innerHTML = '';
-                    } else if(myMines.length < 3) {
-                        myMines.push(i);
-                        t.classList.add('active-mine'); t.innerHTML = '💣';
-                        tg.HapticFeedback.impactOccurred('medium');
-                    }
-                    document.getElementById('m-btn').style.display = (myMines.length === 3) ? 'block' : 'none';
-                };
-                grid.appendChild(t);
+    function sendTraps() {
+        db.ref('rooms/' + currentRoom + '/traps/' + user.id).set(myTraps);
+        document.getElementById('m-btn').style.display = 'none';
+        document.getElementById('game-status').innerText = "WAITING FOR OPPONENT...";
+        
+        // Listen for both ready
+        db.ref('rooms/' + currentRoom + '/traps').on('value', (snap) => {
+            if(snap.numChildren() === 2) {
+                startActualBattle(snap.val());
             }
-        }
+        });
+    }
 
-        function confirmMines() {
-            isBattle = true;
-            document.getElementById('m-btn').style.display = 'none';
-            document.getElementById('m-status').innerText = "BATTLE ON! FIND SAFE TILES";
-            // Имитация врага (в Firebase тут будет ожидание хода другого игрока)
-            enemyMines = [0,1,2,3,4,5,6,7,8].sort(() => Math.random() - 0.5).slice(0,3);
-            
-            document.querySelectorAll('.tile').forEach((t, i) => {
-                t.classList.remove('active-mine'); t.innerHTML = '';
-                t.onclick = () => {
-                    if(t.classList.contains('open')) return;
-                    t.classList.add('open');
-                    if(enemyMines.includes(i)) {
-                        t.innerHTML = '💥'; t.style.background = 'rgba(255,0,0,0.2)';
-                        tg.HapticFeedback.notificationOccurred('error');
-                        setTimeout(() => { alert("YOU HIT A MINE! DEFEAT."); closeMines(); }, 500);
-                    } else {
-                        t.innerHTML = '💎';
-                        tg.HapticFeedback.impactOccurred('light');
-                    }
-                };
-            });
-        }
-    </script>
+    function startActualBattle(allTraps) {
+        tg.HapticFeedback.notificationOccurred('success');
+        document.getElementById('game-status').innerText = "BATTLE! FIND SAFE TILES";
+        
+        // Get enemy traps
+        const enemyId = Object.keys(allTraps).find(id => id != user.id);
+        const enemyTraps = allTraps[enemyId];
+
+        document.querySelectorAll('.tile').forEach((t, i) => {
+            t.classList.remove('selected');
+            t.innerHTML = '';
+            t.onclick = () => {
+                if(t.classList.contains('open')) return;
+                t.classList.add('open');
+                if(enemyTraps.includes(i)) {
+                    t.innerHTML = '💥';
+                    t.style.background = 'rgba(255,0,0,0.2)';
+                    tg.HapticFeedback.notificationOccurred('error');
+                    setTimeout(() => { alert("DEFEAT! -100 STARS"); exitGame(); }, 500);
+                } else {
+                    t.innerHTML = '💎';
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            };
+        });
+    }
+
+    function exitGame() {
+        if(currentRoom) db.ref('rooms/' + currentRoom).remove();
+        location.reload();
+    }
+
+</script>
 </body>
 </html>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+  authDomain: "duels-1fb6b.firebaseapp.com",
+  databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+  projectId: "duels-1fb6b",
+  storageBucket: "duels-1fb6b.firebasestorage.app",
+  messagingSenderId: "745698956226",
+  appId: "1:745698956226:web:27cd811a6633946e85fc5b",
+  measurementId: "G-3BS344MXBP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
