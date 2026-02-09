@@ -13,9 +13,6 @@ const crypto = require('crypto');
   databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com"
 });
 const db = admin.database();
-// ============================================
-// TELEGRAM BOT INITIALIZATION
-// ============================================
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 console.log('🚀 2Duels Bot Started!');
 console.log('📡 Listening for commands...');
