@@ -1,595 +1,360 @@
-// ============================================
-// 2DUELS TELEGRAM BOT BACKEND
-// Node.js + Telegram Bot API + Firebase
-// ============================================
-const TelegramBot = require('node-telegram-bot-api');
-const admin = require('firebase-admin');
-const express = require('express');
-const crypto = require('crypto');
-// ============================================
-// CONFIGURATION
-// ============================================
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com"
-});
-const db = admin.database();
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-console.log('🚀 2Duels Bot Started!');
-console.log('📡 Listening for commands...');
-// ============================================
-// EXPRESS SERVER FOR WEBHOOKS (Optional)
-// ============================================
-const app = express();
-app.use(express.json());
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🌐 Server running on port ${PORT}`);
-});
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
-});
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-// Verify Telegram WebApp data
-function verifyTelegramWebAppData(telegramInitData, botToken) {
-  const initData = new URLSearchParams(telegramInitData);
-  const hash = initData.get('hash');
-  const dataToCheck = [];
-  initData.sort();
-  initData.forEach((val, key) => {
-    if (key !== 'hash') {
-      dataToCheck.push(`${key}=${val}`);
-    }
-  });
-  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-  const signature = crypto.createHmac('sha256', secret).update(dataToCheck.join('\n')).digest('hex');
-  return signature === hash;
-}
-// Get user balance from Firebase
-async function getUserBalance(userId) {
-  try {
-    const snapshot = await db.ref(`users/${userId}/balance`).once('value');
-    return snapshot.val() || 1000; // Default balance
-  } catch (error) {
-    console.error('Error getting balance:', error);
-    return 1000;
-  }
-}
-
-// Update user balance
-async function updateUserBalance(userId, amount) {
-  try {
-    const currentBalance = await getUserBalance(userId);
-    const newBalance = currentBalance + amount;
-    await db.ref(`users/${userId}/balance`).set(newBalance);
-    return newBalance;
-  } catch (error) {
-    console.error('Error updating balance:', error);
-    return null;
-  }
-}
-
-// Get user inventory
-async function getUserInventory(userId) {
-  try {
-    const snapshot = await db.ref(`users/${userId}/inventory`).once('value');
-    const inventory = snapshot.val() || {};
-    return Object.values(inventory);
-  } catch (error) {
-    console.error('Error getting inventory:', error);
-    return [];
-  }
-}
-
-// Get user stats
-async function getUserStats(userId) {
-  try {
-    const snapshot = await db.ref(`users/${userId}/games`).once('value');
-    const games = snapshot.val() || {};
-    
-    let totalGames = 0;
-    let totalWins = 0;
-    
-    Object.keys(games).forEach(gameType => {
-      const gameSessions = Object.values(games[gameType]);
-      totalGames += gameSessions.length;
-      totalWins += gameSessions.filter(session => session.won || session.cashedOut).length;
-    });
-    
-    return {
-      totalGames,
-      totalWins,
-      winRate: totalGames > 0 ? ((totalWins / totalGames) * 100).toFixed(1) : 0
-    };
-  } catch (error) {
-    console.error('Error getting stats:', error);
-    return { totalGames: 0, totalWins: 0, winRate: 0 };
-  }
-}
-
-// ============================================
-// TELEGRAM BOT COMMANDS
-// ============================================
-
-// /start command
-bot.onText(/\/start/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const firstName = msg.from.first_name;
-
-  console.log(`📥 /start command from ${firstName} (${userId})`);
-
-  // Save user to Firebase
-  await db.ref(`users/${userId}`).update({
-    firstName: firstName,
-    username: msg.from.username || '',
-    lastSeen: Date.now()
-  });
-
-  const welcomeMessage = `
-🎮 *2DUELS - TACTICAL MONOLITH*
-
-Добро пожаловать, ${firstName}!
-
-*Доступные игры:*
-🪙 *Coin Flip* - классическая дуэль на удачу
-💣 *Mines* - стратегическое минное поле  
-🔫 *Russian Roulette* - высокие ставки
-🚀 *Crash* - растущий множитель
-
-💎 *NFT Inventory* - храните награды
-⭐ *Telegram Stars* - внутриигровая валюта
-
-_Нажмите кнопку ниже, чтобы начать играть!_
-  `.trim();
-
-  bot.sendMessage(chatId, welcomeMessage, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [{ 
-          text: '🎮 ИГРАТЬ', 
-          web_app: { url: WEBAPP_URL } 
-        }],
-        [
-          { text: '💰 Баланс', callback_data: 'balance' },
-          { text: '💎 Инвентарь', callback_data: 'inventory' }
-        ],
-        [
-          { text: '📊 Статистика', callback_data: 'stats' },
-          { text: '❓ Помощь', callback_data: 'help' }
-        ]
-      ]
-    }
-  });
-});
-
-// /balance command
-bot.onText(/\/balance/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-
-  console.log(`📥 /balance command from ${userId}`);
-
-  const balance = await getUserBalance(userId);
-
-  bot.sendMessage(chatId, `⭐ *Ваш баланс:* ${balance} звезд`, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }],
-        [{ text: '💳 Пополнить', callback_data: 'topup' }]
-      ]
-    }
-  });
-});
-
-// /inventory command
-bot.onText(/\/inventory/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-
-  console.log(`📥 /inventory command from ${userId}`);
-
-  const inventory = await getUserInventory(userId);
-
-  if (inventory.length === 0) {
-    bot.sendMessage(chatId, `💎 *Ваш инвентарь пуст*\n\n_Выигрывайте в играх, чтобы получить NFT и награды!_`, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
-        ]
-      }
-    });
-  } else {
-    const inventoryText = inventory.map((item, index) => {
-      const rarityEmoji = {
-        common: '⚪',
-        rare: '🔵',
-        epic: '🟣',
-        legendary: '🟡'
-      };
-      return `${index + 1}. ${item.icon} *${item.name}* ${rarityEmoji[item.rarity] || ''}`;
-    }).join('\n');
-
-    bot.sendMessage(chatId, `💎 *Ваш инвентарь* (${inventory.length} предметов):\n\n${inventoryText}`, {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
-        ]
-      }
-    });
-  }
-});
-
-// /stats command
-bot.onText(/\/stats/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-
-  console.log(`📥 /stats command from ${userId}`);
-
-  const stats = await getUserStats(userId);
-  const balance = await getUserBalance(userId);
-  const inventory = await getUserInventory(userId);
-
-  const statsMessage = `
-📊 *Ваша статистика*
-
-⭐ *Баланс:* ${balance} звезд
-💎 *NFT предметов:* ${inventory.length}
-
-🎮 *Игры:*
-├ Всего игр: ${stats.totalGames}
-├ Побед: ${stats.totalWins}
-└ Процент побед: ${stats.winRate}%
-  `.trim();
-
-  bot.sendMessage(chatId, statsMessage, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
-      ]
-    }
-  });
-});
-
-// /help command
-bot.onText(/\/help/, (msg) => {
-  const chatId = msg.chat.id;
-
-  console.log(`📥 /help command from ${msg.from.id}`);
-
-  const helpMessage = `
-❓ *ПОМОЩЬ*
-
-*Доступные команды:*
-/start - Главное меню
-/balance - Проверить баланс
-/inventory - Открыть инвентарь
-/stats - Показать статистику
-/help - Эта справка
-
-*Правила игр:*
-
-🪙 *Орел и Решка*
-Классическая игра на удачу. Выберите сторону монеты и подбросьте. Совпадение = победа!
-
-💣 *Мины*
-Сетка 5x5 с минами. Открывайте ячейки, находите гемы. Попадание на мину = проигрыш.
-
-🔫 *Русская Рулетка*  
-Барабан револьвера с одним зарядом. Нажимайте курок. Выживание = победа!
-
-🚀 *Краш*
-Ракета взлетает с растущим множителем. Заберите выигрыш до взрыва!
-
-*Поддержка:* @YourSupportUsername
-  `.trim();
-
-  bot.sendMessage(chatId, helpMessage, {
-    parse_mode: 'Markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
-      ]
-    }
-  });
-});
-
-// ============================================
-// CALLBACK QUERY HANDLERS
-// ============================================
-
-bot.on('callback_query', async (query) => {
-  const chatId = query.message.chat.id;
-  const userId = query.from.id;
-  const data = query.data;
-
-  console.log(`📥 Callback query: ${data} from ${userId}`);
-
-  // Answer callback query to remove loading state
-  bot.answerCallbackQuery(query.id);
-
-  switch (data) {
-    case 'balance':
-      const balance = await getUserBalance(userId);
-      bot.sendMessage(chatId, `⭐ *Ваш баланс:* ${balance} звезд`, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }],
-            [{ text: '💳 Пополнить', callback_data: 'topup' }]
-          ]
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2Duels Tactical</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --card: rgba(28, 28, 32, 0.8);
+            --accent: #00f2ff;
+            --pink: #ff007a;
+            --text: #ffffff;
+            --dim: #88888b;
         }
-      });
-      break;
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+        
+        /* Экраны */
+        .screen { display: none; padding: 60px 20px 100px; height: 100vh; overflow-y: auto; }
+        .screen.active { display: block; }
 
-    case 'inventory':
-      const inventory = await getUserInventory(userId);
-      if (inventory.length === 0) {
-        bot.sendMessage(chatId, `💎 *Ваш инвентарь пуст*\n\n_Выигрывайте в играх!_`, {
-          parse_mode: 'Markdown'
-        });
-      } else {
-        const inventoryText = inventory.map((item, index) => 
-          `${index + 1}. ${item.icon} ${item.name}`
-        ).join('\n');
-        bot.sendMessage(chatId, `💎 *Инвентарь:*\n\n${inventoryText}`, {
-          parse_mode: 'Markdown'
-        });
-      }
-      break;
-
-    case 'stats':
-      const stats = await getUserStats(userId);
-      bot.sendMessage(chatId, 
-        `📊 *Статистика:*\n\nИгр: ${stats.totalGames}\nПобед: ${stats.totalWins}\nWin rate: ${stats.winRate}%`,
-        { parse_mode: 'Markdown' }
-      );
-      break;
-
-    case 'help':
-      bot.sendMessage(chatId, `❓ Используйте /help для подробной справки`);
-      break;
-
-    case 'topup':
-      // TODO: Implement Telegram Stars payment
-      bot.sendMessage(chatId, 
-        `💳 *Пополнение баланса*\n\n_Функция пополнения через Telegram Stars будет доступна скоро!_`,
-        { 
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🎮 Играть', web_app: { url: WEBAPP_URL } }]
-            ]
-          }
+        /* Навигация как на скринах */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%; height: 75px;
+            background: rgba(15, 15, 18, 0.98); backdrop-filter: blur(15px);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000;
         }
-      );
-      break;
+        .nav-btn { display: flex; flex-direction: column; align-items: center; color: var(--dim); font-size: 11px; transition: 0.3s; }
+        .nav-btn.active { color: var(--accent); }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
 
-    default:
-      bot.sendMessage(chatId, `Неизвестная команда: ${data}`);
-  }
-});
+        /* Карточки игр Соло */
+        .game-banner {
+            background: var(--card); border-radius: 20px; padding: 25px;
+            margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255,255,255,0.03); position: relative; overflow: hidden;
+        }
+        .game-info h3 { font-size: 20px; margin-bottom: 5px; }
+        .game-info p { font-size: 12px; color: var(--dim); }
 
-// ============================================
-// TELEGRAM STARS PAYMENT INTEGRATION
-// (Future implementation)
-// ============================================
+        /* Баланс и хедер */
+        header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; background: var(--bg); z-index: 1000; }
+        .online-tag { color: #44ff44; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .online-dot { width: 6px; height: 6px; background: #44ff44; border-radius: 50%; box-shadow: 0 0 10px #44ff44; }
+    </style>
+</head>
+<body>
 
-/*
-// Invoice creation
-bot.onText(/\/buy (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const productId = match[1];
+<header>
+    <div onclick="window.Telegram.WebApp.close()">✕ Закрыть</div>
+    <div class="online-tag"><span class="online-dot"></span> 227 онлайн</div>
+    <div>⋮</div>
+</header>
 
-  const prices = {
-    'stars_100': { amount: 100, price: 1 },
-    'stars_500': { amount: 500, price: 4 },
-    'stars_1000': { amount: 1000, price: 7 }
-  };
+<div id="pvp" class="screen active">
+    <div id="wheel-container" style="text-align:center;">
+        </div>
+</div>
 
-  const product = prices[productId];
-  
-  if (!product) {
-    bot.sendMessage(chatId, 'Продукт не найден');
-    return;
-  }
+<div id="solo" class="screen">
+    <div class="game-banner">
+        <div class="game-info"><h3>Орел и Решка</h3><p>Классическая дуэль 50/50</p></div>
+        <div class="game-icon">🪙</div>
+    </div>
+    <div class="game-banner">
+        <div class="game-info"><h3>Русская Рулетка</h3><p>Один шанс из шести</p></div>
+        <div class="game-icon">🔫</div>
+    </div>
+    <div class="game-banner">
+        <div class="game-info"><h3>КНБ</h3><p>Камень, Ножницы, Бумага</p></div>
+        <div class="game-icon">✌️</div>
+    </div>
+    <div class="game-banner">
+        <div class="game-info"><h3>Чипсы</h3><p>Минное поле 3х3</p></div>
+        <div class="game-icon">💣</div>
+    </div>
+</div>
 
-  bot.sendInvoice(
-    chatId,
-    `${product.amount} звезд`,
-    `Пополнение баланса на ${product.amount} звезд`,
-    productId,
-    'XTR', // Telegram Stars currency
-    [{ label: `${product.amount} звезд`, amount: product.price }],
-    {
-      photo_url: 'https://example.com/star-icon.png',
-      photo_width: 512,
-      photo_height: 512
+<nav class="nav-bar">
+    <div class="nav-btn active" onclick="setScreen('pvp', this)">
+        <span class="nav-icon">⚔️</span><span>ПвП</span>
+    </div>
+    <div class="nav-btn" onclick="setScreen('solo', this)">
+        <span class="nav-icon">🎯</span><span>Соло</span>
+    </div>
+    <div class="nav-btn">
+        <span class="nav-icon">🎁</span><span>Розыгрыши</span>
+    </div>
+    <div class="nav-btn" onclick="setScreen('profile', this)">
+        <span class="nav-icon">👤</span><span>Профиль</span>
+    </div>
+</nav>
+
+<script>
+    function setScreen(id, el) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
     }
-  );
-});
+</script>
+// --- ИНИЦИАЛИЗАЦИЯ FIREBASE (ТВОЙ КОНФИГ) ---
+const firebaseConfig = {
+    apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+    authDomain: "duels-1fb6b.firebaseapp.com",
+    databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+    projectId: "duels-1fb6b",
+    storageBucket: "duels-1fb6b.firebasestorage.app",
+    messagingSenderId: "745698956226",
+    appId: "1:745698956226:web:27cd811a6633946e85fc5b",
+    measurementId: "G-3BS344MXBP"
+};
 
-// Handle successful payment
-bot.on('pre_checkout_query', (query) => {
-  bot.answerPreCheckoutQuery(query.id, true);
-});
+// --- МАТЕМАТИКА PVP РУЛЕТКИ (8 ИГРОКОВ) ---
+const wheelContainer = document.getElementById('wheel-container');
+wheelContainer.innerHTML = `
+    <div style="position:relative; width:320px; margin:0 auto;">
+        <div id="wheel-timer" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); 
+             width:80px; height:80px; background:#000; border-radius:50%; display:flex; 
+             align-items:center; justify-content:center; font-weight:bold; z-index:5;">00:00</div>
+        <canvas id="wheelCanvas" width="600" height="600" style="width:100%; height:auto; border-radius:50%; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);"></canvas>
+        <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:25px solid #fff; z-index:10;"></div>
+    </div>
+    <div id="wheel-info" style="margin-top:20px; font-size:14px; color:var(--dim);">ВСЕГО: <span id="total-bank" style="color:var(--accent)">0.00 TON</span></div>
+`;
 
-bot.on('successful_payment', async (msg) => {
-  const userId = msg.from.id;
-  const productId = msg.successful_payment.invoice_payload;
-  
-  const prices = {
-    'stars_100': 100,
-    'stars_500': 500,
-    'stars_1000': 1000
-  };
-  
-  const amount = prices[productId];
-  
-  if (amount) {
-    await updateUserBalance(userId, amount);
-    bot.sendMessage(msg.chat.id, 
-      `✅ Платеж успешен!\n\n⭐ Начислено: ${amount} звезд`
-    );
-  }
-});
-*/
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+let players = [
+    { name: "@Magikmoney", bet: 1.15, color: "#ff007a", avatar: "🐵" },
+    { name: "@giftgambler", bet: 1.52, color: "#7a00ff", avatar: "👤" },
+    { name: "@x_player", bet: 0.5, color: "#00f2ff", avatar: "⭐️" }
+];
 
-// ============================================
-// WEB APP DATA ENDPOINT
-// ============================================
+function drawWheel() {
+    const total = players.reduce((sum, p) => sum + p.bet, 0);
+    document.getElementById('total-bank').innerText = total.toFixed(2) + " TON";
+    let startAngle = 0;
 
-app.post('/webapp/auth', (req, res) => {
-  const { initData } = req.body;
-
-  if (!initData) {
-    return res.status(400).json({ error: 'Missing initData' });
-  }
-
-  // Verify Telegram data signature
-  const isValid = verifyTelegramWebAppData(initData, TELEGRAM_BOT_TOKEN);
-
-  if (!isValid) {
-    return res.status(401).json({ error: 'Invalid signature' });
-  }
-
-  // Parse user data
-  const params = new URLSearchParams(initData);
-  const userJson = params.get('user');
-  const user = JSON.parse(userJson);
-
-  // Create custom Firebase token
-  admin.auth()
-    .createCustomToken(user.id.toString())
-    .then(customToken => {
-      res.json({ 
-        success: true, 
-        token: customToken,
-        user: user
-      });
-    })
-    .catch(error => {
-      console.error('Error creating custom token:', error);
-      res.status(500).json({ error: 'Token creation failed' });
+    players.forEach(p => {
+        const slice = (p.bet / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(300, 300);
+        ctx.arc(300, 300, 290, startAngle, startAngle + slice);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        
+        // Рисуем аватарку в секторе
+        const midAngle = startAngle + slice / 2;
+        ctx.save();
+        ctx.translate(300 + Math.cos(midAngle) * 200, 300 + Math.sin(midAngle) * 200);
+        ctx.font = "40px Arial";
+        ctx.fillText(p.avatar, -20, 20);
+        ctx.restore();
+        
+        startAngle += slice;
     });
-});
-
-// ============================================
-// GAME EVENTS LOGGING
-// ============================================
-
-app.post('/game/event', async (req, res) => {
-  const { userId, gameType, eventType, data } = req.body;
-
-  console.log(`🎮 Game event: ${gameType} - ${eventType} by user ${userId}`);
-
-  try {
-    await db.ref(`events/${userId}/${gameType}`).push({
-      eventType,
-      data,
-      timestamp: Date.now()
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging event:', error);
-    res.status(500).json({ error: 'Failed to log event' });
-  }
-});
-
-// ============================================
-// LEADERBOARD
-// ============================================
-
-app.get('/leaderboard', async (req, res) => {
-  try {
-    const usersSnapshot = await db.ref('users').once('value');
-    const users = usersSnapshot.val() || {};
-
-    const leaderboard = Object.entries(users)
-      .map(([userId, userData]) => ({
-        userId,
-        firstName: userData.firstName || 'Unknown',
-        balance: userData.balance || 0
-      }))
-      .sort((a, b) => b.balance - a.balance)
-      .slice(0, 10);
-
-    res.json({ leaderboard });
-  } catch (error) {
-    console.error('Error getting leaderboard:', error);
-    res.status(500).json({ error: 'Failed to get leaderboard' });
-  }
-});
-
-// ============================================
-// ERROR HANDLING
-// ============================================
-
-bot.on('polling_error', (error) => {
-  console.error('❌ Polling error:', error);
-});
-
-process.on('unhandledRejection', (error) => {
-  console.error('❌ Unhandled rejection:', error);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught exception:', error);
-});
-
-// ============================================
-// GRACEFUL SHUTDOWN
-// ============================================
-
-process.on('SIGINT', async () => {
-  console.log('\n👋 Shutting down bot...');
-  await bot.stopPolling();
-  process.exit(0);
-});
-
-console.log('✅ Bot initialization complete!');
-console.log(`🌐 Web App URL: ${WEBAPP_URL}`);
-console.log('💬 Ready to receive commands!');
-  "name": "2duels-bot",
-  "version": "1.0.0",
-  "description": "2Duels Tactical Monolith - Telegram Mini App Bot Backend",
-  "main": "bot.js",
-  "scripts": {
-    "start": "node bot.js",
-    "dev": "nodemon bot.js",
-    "test": "echo \"No tests yet\" && exit 0"
-  },
-  "keywords": [
-    "telegram",
-    "bot",
-    "miniapp",
-    "games",
-    "firebase",
-    "2duels"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "dependencies": {
-    "node-telegram-bot-api": "^0.64.0",
-    "firebase-admin": "^12.0.0",
-    "express": "^4.18.2",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
-  },
-  "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
-  }
 }
- 
+
+// --- ЛОГИКА СОЛО ИГР ---
+const soloLogic = {
+    coinFlip: (choice) => {
+        const res = Math.random() > 0.5 ? 'Орел' : 'Решка';
+        return res === choice ? "WIN" : "LOSE";
+    },
+    russianRoulette: () => {
+        const chamber = Math.floor(Math.random() * 6);
+        return chamber === 0 ? "DEAD" : "SURVIVED";
+    },
+    knb: (userMove) => {
+        const moves = ['Камень', 'Ножницы', 'Бумага'];
+        const bot = moves[Math.floor(Math.random() * 3)];
+        if (userMove === bot) return "DRAW";
+        if ((userMove === 'Камень' && bot === 'Ножницы') || 
+            (userMove === 'Ножницы' && bot === 'Бумага') || 
+            (userMove === 'Бумага' && bot === 'Камень')) return "WIN";
+        return "LOSE";
+    },
+    chips: (userPick, mines) => {
+        return mines.includes(userPick) ? "BOOM" : "SAFE";
+    }
+};
+
+window.onload = () => { drawWheel(); };
+// --- ДОБАВЛЕНИЕ ЭКРАНА ПРОФИЛЯ В СТРУКТУРУ ---
+const profileScreen = `
+<div id="profile" class="screen">
+    <div class="profile-header" style="text-align:center; margin-bottom:30px;">
+        <div class="avatar-container" style="position:relative; width:90px; height:90px; margin:0 auto 15px;">
+            <img src="https://via.placeholder.com/90" id="user-avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid #333;">
+            <div style="position:absolute; bottom:0; right:0; background:#44ff44; width:15px; height:15px; border-radius:50%; border:2px solid var(--bg);"></div>
+        </div>
+        <h2 id="user-username" style="font-size:22px; letter-spacing:1px;">@xdogum</h2>
+    </div>
+
+    <div class="balance-card" style="background:var(--card); border-radius:24px; padding:20px; margin-bottom:25px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <p style="font-size:12px; color:var(--dim); margin-bottom:5px;">Rolls баланс</p>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:#4a90e2; font-size:20px;">💎</span>
+                <span id="user-ton-balance" style="font-size:20px; font-weight:bold;">0 TON</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="action-btn" style="background:#007aff; color:#fff; border:none; padding:12px 20px; border-radius:12px; font-weight:bold;">Пополнить</button>
+            <button class="action-btn" style="background:#222; color:#fff; border:none; padding:12px 15px; border-radius:12px;">🗒</button>
+        </div>
+    </div>
+
+    <div class="menu-list" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="menu-item" onclick="openInventory()">
+            <span class="menu-icon">🎁</span>
+            <span class="menu-label">Инвентарь подарков</span>
+            <span class="menu-badge" style="background:var(--pink);">0</span>
+            <span class="menu-arrow">❯</span>
+        </div>
+        <div class="menu-item">
+            <span class="menu-icon">📜</span>
+            <span class="menu-label">Задания</span>
+            <span class="menu-badge" style="background:#ff9800;">0 / 22</span>
+            <span class="menu-arrow">❯</span>
+        </div>
+        <div class="menu-item">
+            <span class="menu-icon">💎</span>
+            <span class="menu-label">Рефералы</span>
+            <span class="menu-arrow">❯</span>
+        </div>
+        <div class="menu-item">
+            <span class="menu-icon">💰</span>
+            <span class="menu-label">Стейкинг</span>
+            <span class="menu-arrow">❯</span>
+        </div>
+    </div>
+</div>
+`;
+
+// Инъекция в HTML
+document.body.insertAdjacentHTML('beforeend', profileScreen);
+
+// --- СТИЛИ ДЛЯ МЕНЮ ПРОФИЛЯ ---
+const profileStyles = `
+    .menu-item {
+        background: var(--card);
+        padding: 18px 20px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+    .menu-item:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
+    .menu-icon { font-size: 20px; margin-right: 15px; }
+    .menu-label { flex-grow: 1; font-size: 15px; font-weight: 500; }
+    .menu-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    .menu-arrow { color: #333; font-size: 14px; }
+`;
+const styleSheet = document.createElement("style");
+styleSheet.innerText = profileStyles;
+document.head.appendChild(styleSheet);
+
+// --- ЛОГИКА ИНВЕНТАРЯ ---
+function openInventory() {
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    alert("Инвентарь пуст. Выигрывайте дуэли, чтобы получить NFT!");
+}
+// --- ЭКРАН ЗАГРУЗКИ (TERMINAL BOOT) ---
+const bootHTML = `
+<div id="boot-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'JetBrains Mono', monospace; padding:20px;">
+    <div id="boot-logo" style="font-size:40px; font-weight:bold; color:var(--accent); margin-bottom:30px; opacity:0; transform:scale(0.8); transition:2s;">2DUELS</div>
+    <div id="boot-loader" style="width:200px; height:2px; background:#111; position:relative; margin-bottom:20px;">
+        <div id="boot-bar" style="position:absolute; top:0; left:0; height:100%; width:0%; background:var(--accent); box-shadow:0 0 10px var(--accent); transition:0.5s;"></div>
+    </div>
+    <div id="boot-logs" style="font-size:10px; color:#444; text-align:center; height:50px; line-height:1.5;"></div>
+</div>
+`;
+
+document.body.insertAdjacentHTML('afterbegin', bootHTML);
+
+// --- ЛОГИКА ЗАГРУЗКИ ---
+const logs = [
+    "INITIALIZING KERNEL...",
+    "CONNECTING TO FIREBASE NODE...",
+    "SYNCING PVP ENGINE...",
+    "LOADING ASSETS: WHEEL, COIN, KNIFE...",
+    "ACCESS GRANTED."
+];
+
+function startBoot() {
+    const logEl = document.getElementById('boot-logs');
+    const bar = document.getElementById('boot-bar');
+    const logo = document.getElementById('boot-logo');
+    let step = 0;
+
+    logo.style.opacity = "1";
+    logo.style.transform = "scale(1)";
+
+    const interval = setInterval(() => {
+        if (step < logs.length) {
+            logEl.innerHTML = logs[step];
+            bar.style.width = ((step + 1) / logs.length) * 100 + "%";
+            step++;
+        } else {
+            clearInterval(interval);
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById('boot-screen').style.display = "none";
+                    // Инициализация Telegram WebApp Haptics
+                    if(window.Telegram.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                }, 500);
+            }, 800);
+        }
+    }, 800);
+}
+
+// --- ВИЗУАЛИЗАЦИЯ ИКОНОК ИГР (SVG/CSS) ---
+function injectGameIcons() {
+    const banners = document.querySelectorAll('.game-banner');
+    const colors = ['#ffcc00', '#ff3333', '#00ffcc', '#ff00ff'];
+    
+    banners.forEach((banner, i) => {
+        banner.style.borderLeft = `4px solid ${colors[i]}`;
+        // Добавляем эффект свечения при наведении/клике
+        banner.addEventListener('touchstart', () => {
+            banner.style.boxShadow = `0 0 20px ${colors[i]}44`;
+        });
+        banner.addEventListener('touchend', () => {
+            banner.style.boxShadow = "none";
+        });
+    });
+}
+
+// --- ФИНАЛЬНАЯ СКЛЕЙКА (APP START) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Запуск загрузки
+    startBoot();
+    
+    // 2. Отрисовка рулетки (из части 2)
+    if(typeof drawWheel === "function") drawWheel();
+    
+    // 3. Иконки и стили
+    injectGameIcons();
+    
+    // 4. Твоя система звезд (место для кода)
+    console.log("System ready for Stars integration...");
+});
+
+// Закрываем все открытые ранее теги
+</script>
+</body>
+</html>
