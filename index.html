@@ -174,3 +174,182 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>2Duels | Tactical Monolith</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap');
+
+        :root {
+            --neon: #00f2ff;
+            --bg: #050505;
+            --card: #0f0f0f;
+            --border: #1a1a1a;
+        }
+
+        body, html {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* ЭКРАН ЗАГРУЗКИ (MONOLITH STYLE) */
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center;
+        }
+        .boot-terminal {
+            width: 300px; color: var(--neon); font-size: 12px;
+        }
+
+        /* HEADER */
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .logo-text { font-weight: 800; font-size: 24px; letter-spacing: 2px; color: var(--neon); }
+
+        /* GRID */
+        .hub-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .game-node {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 30px;
+            text-align: left;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .game-node:hover {
+            border-color: var(--neon);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+        .game-node h3 { margin: 0; text-transform: uppercase; font-size: 18px; }
+        .game-node .desc { font-size: 10px; color: #555; margin-top: 5px; }
+
+        /* ИНВЕНТАРЬ / NFT */
+        #nft-storage {
+            position: fixed; bottom: 20px; width: 100%;
+            display: flex; justify-content: center; gap: 10px;
+        }
+        .nft-slot {
+            width: 40px; height: 40px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* ЭКРАН ИГРЫ (ОТДЕЛЬНЫЙ) */
+        #game-view {
+            position: fixed; top: 0; left: 100%; width: 100%; height: 100%;
+            background: var(--bg); transition: 0.5s cubic-bezier(0.7, 0, 0.3, 1);
+            z-index: 5000; padding: 40px; box-sizing: border-box;
+        }
+        #game-view.active { left: 0; }
+
+        .back-btn { cursor: pointer; color: var(--neon); margin-bottom: 40px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="boot-screen">
+        <div class="boot-terminal" id="term-out"></div>
+    </div>
+
+    <header>
+        <div class="logo-text">2DUELS</div>
+        <div style="font-size: 10px; color: #444;">ID: 9271704949</div>
+    </header>
+
+    <div class="hub-container">
+        <div class="game-node" onclick="openGame('COIN FLIP')">
+            <h3>ОРЕЛ И РЕШКА</h3>
+            <div class="desc">PROBABILITY: 50/50</div>
+        </div>
+        <div class="game-node" onclick="openGame('MINESWEEPER')">
+            <h3>МИНЫ</h3>
+            <div class="desc">SECTOR ANALYSIS REQUIRED</div>
+        </div>
+        <div class="game-node" onclick="openGame('ROULETTE')">
+            <h3>РУССКАЯ РУЛЕТКА</h3>
+            <div class="desc">CHAMBER: 1/6</div>
+        </div>
+        <div class="game-node" onclick="openGame('CRASH')">
+            <h3>КРАШ</h3>
+            <div class="desc">ASCENSION MULTIPLIER</div>
+        </div>
+    </div>
+
+    <div id="nft-storage">
+        <div class="nft-slot"></div>
+        <div class="nft-slot"></div>
+        <div class="nft-slot"></div>
+    </div>
+
+    <div id="game-view">
+        <span class="back-btn" onclick="closeGame()">[ BACK_TO_HUB ]</span>
+        <h1 id="game-title" style="color: var(--neon);"></h1>
+        <div id="game-arena" style="width:100%; height:300px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center;">
+            <div class="loader-circle" style="width:50px; height:50px; border:2px solid var(--neon); border-top:none; border-radius:50%; animation: spin 1s infinite linear;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ТВОЙ FIREBASE
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            projectId: "duels-1fb6b",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+        const app = initializeApp(firebaseConfig);
+
+        // ТЕРМИНАЛ ЗАГРУЗКИ
+        const lines = [
+            "> BIOS CHECK... OK",
+            "> MEMORY ALLOC... 64KB",
+            "> MOUNTING /SYS... DONE",
+            "> SECURE HANDSHAKE... KEY_OK",
+            "> STARTING 2DUELS UI... READY"
+        ];
+        let i = 0;
+        const term = document.getElementById('term-out');
+        const interval = setInterval(() => {
+            if(i < lines.length) {
+                term.innerHTML += lines[i] + "<br>";
+                i++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => document.getElementById('boot-screen').style.display = 'none', 500);
+            }
+        }, 400);
+
+        // ЛОГИКА СТРАНИЦ
+        window.openGame = (title) => {
+            document.getElementById('game-title').innerText = title;
+            document.getElementById('game-view').classList.add('active');
+        };
+        window.closeGame = () => {
+            document.getElementById('game-view').classList.remove('active');
+        };
+    </script>
+    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+</body>
+</html>
