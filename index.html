@@ -512,4 +512,183 @@ function setScreen(name) {
 
 // ФИНАЛЬНЫЙ СТАРТ
 runFinalBoot();
-// initChipsPVP(); // Разкомментируй, если хочешь сразу мины
+// initChipsPVP(); // Разкомментируй, если хочешь сразу мины 
+    <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2Duels Reconstruction</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0b;
+            --panel: rgba(25, 25, 28, 0.95);
+            --accent: #00f2ff;
+            --pink: #ff007a;
+            --gold: #ffd700;
+            --text: #ffffff;
+            --dim: #88888b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+
+        /* --- UI КАРКАС --- */
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 100; background: var(--bg); }
+        .screen { display: none; padding: 70px 20px 100px; height: 100vh; overflow-y: auto; }
+        .screen.active { display: block; }
+
+        /* --- ГЕЙМ-ЗОНА --- */
+        .game-card { background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-play { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; width: 100%; margin-top: 10px; }
+
+        /* --- РУЛЕТКА CANVAS --- */
+        .wheel-box { position: relative; width: 260px; height: 260px; margin: 0 auto 20px; }
+        #wheelCanvas { width: 100%; height: 100%; transition: transform 4s cubic-bezier(0.1, 0, 0.2, 1); }
+        .wheel-arrow { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 20px; height: 30px; background: #fff; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; }
+
+        /* --- ИНВЕНТАРЬ И ПРОФИЛЬ --- */
+        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .inv-item { aspect-ratio: 1/1; background: var(--panel); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .rarity-gold { border-color: var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+
+        /* --- НАВИГАЦИЯ --- */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #111; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
+        .nav-item { color: var(--dim); font-size: 11px; text-align: center; }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+        /* --- АНИМАЦИИ --- */
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-win { animation: bounce 0.5s ease 3; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div id="lang-toggle" onclick="toggleLang()">🇷🇺 RU</div>
+    <div style="color: var(--accent); font-weight: bold;">2DUELS</div>
+    <div id="balance-header">0 ⭐️</div>
+</header>
+
+<div id="scr-games" class="screen active">
+    <div class="wheel-box">
+        <div class="wheel-arrow"></div>
+        <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    </div>
+    
+    <div class="game-card">
+        <h3 id="t-roulette">Русская Рулетка</h3>
+        <p id="t-roulette-desc">PVP Дуэль на выживание</p>
+        <button class="btn-play" onclick="startRoulette()">ИГРАТЬ 1 VS 1</button>
+    </div>
+
+    <div class="game-card">
+        <h3 id="t-knb">КНБ Дуэль</h3>
+        <button class="btn-play" onclick="alert('Ожидание игрока...')">ВЫЗВАТЬ</button>
+    </div>
+</div>
+
+<div id="scr-profile" class="screen">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="width: 80px; height: 80px; background: #333; border-radius: 50%; margin: 0 auto 10px; border: 2px solid var(--accent);"></div>
+        <h2 id="u-name">Player</h2>
+    </div>
+
+    <h3 id="t-inv">Инвентарь</h3>
+    <div class="inv-grid" id="inventory-container">
+        </div>
+
+    <div class="game-card" style="margin-top: 20px;">
+        <h3 id="t-market">Маркет</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <span>🔫 Gold Deagle</span>
+            <button onclick="buyGoldDeagle()" id="btn-buy" style="background:var(--gold); border:none; padding:5px 15px; border-radius:5px; font-weight:bold;">100 ⭐️</button>
+        </div>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="showScr('games')"><span class="nav-icon">🎮</span>Игры</div>
+    <div class="nav-item" onclick="showScr('profile')"><span class="nav-icon">👤</span>Профиль</div>
+</nav>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let state = {
+        lang: 'RU',
+        hasDeagle: false,
+        balance: 500
+    };
+
+    // --- ПОЧИНЕННАЯ ЛОГИКА РУЛЕТКИ ---
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    function drawWheel() {
+        const colors = ['#ff007a', '#00f2ff', '#7a00ff', '#ffcc00'];
+        let angle = 0;
+        for(let i=0; i<8; i++) {
+            ctx.beginPath();
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 240, angle, angle + Math.PI/4);
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fill();
+            ctx.stroke();
+            angle += Math.PI/4;
+        }
+    }
+
+    function startRoulette() {
+        tg.HapticFeedback.impactOccurred('medium');
+        const deg = 1800 + Math.random() * 360;
+        canvas.style.transform = `rotate(${deg}deg)`;
+        setTimeout(() => {
+            alert(state.hasDeagle ? "Золотой Дигл принес победу!" : "Вы проиграли в рулетку!");
+        }, 4500);
+    }
+
+    // --- ПОЧИНЕННЫЙ ИНВЕНТАРЬ ---
+    function buyGoldDeagle() {
+        state.hasDeagle = true;
+        tg.HapticFeedback.notificationOccurred('success');
+        updateInv();
+        document.getElementById('btn-buy').innerText = "КУПЛЕНО";
+        alert("Скин Gold Deagle экипирован!");
+    }
+
+    function updateInv() {
+        const container = document.getElementById('inventory-container');
+        container.innerHTML = '';
+        if(state.hasDeagle) {
+            container.innerHTML = `<div class="inv-item rarity-gold">🔫</div>`;
+        }
+        for(let i=0; i<(state.hasDeagle ? 5 : 6); i++) {
+            container.innerHTML += `<div class="inv-item"></div>`;
+        }
+    }
+
+    // --- НАСТРОЙКИ ЯЗЫКА ---
+    function toggleLang() {
+        state.lang = state.lang === 'RU' ? 'EN' : 'RU';
+        document.getElementById('lang-toggle').innerText = state.lang === 'RU' ? '🇷🇺 RU' : '🇺🇸 EN';
+        // Тут можно добавить смену всех id="t-..." текстов
+    }
+
+    function showScr(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('scr-' + id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    window.onload = () => {
+        drawWheel();
+        updateInv();
+    };
+</script>
+</body>
+</html>
+
