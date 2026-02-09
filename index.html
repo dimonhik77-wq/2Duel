@@ -1,171 +1,1092 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Disc, Briefcase, LayoutGrid, Settings, Trophy } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0c10; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
+        .neon-border { border-left: 4px solid #ffca2d; box-shadow: -10px 0 20px rgba(255, 202, 45, 0.1); }
+    </style>
+</head>
+<body class="text-white p-5 pb-24">
 
-// --- КОМПОНЕНТ 1: ТЕРМИНАЛ (ЗАГРУЗКА) ---
-const Terminal = ({ onFinish }) => {
-  const lines = [
-    "> INITIALIZING KERNEL...",
-    "> CONNECTING TO FIREBASE...",
-    "> LOADING NEON_ASSETS...",
-    "> SYSTEM READY."
-  ];
-
-  return (
-    <motion.div 
-      exit={{ opacity: 0, scale: 1.1 }}
-      className="fixed inset-0 bg-[#0f1014] z-50 flex flex-col justify-center p-8 font-mono text-[#00ff41]"
-    >
-      <div className="max-w-md mx-auto w-full">
-        {lines.map((line, i) => (
-          <motion.p 
-            key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.5 }}
-            className="mb-2 text-sm md:text-base"
-          >
-            {line}
-          </motion.p>
-        ))}
-        <motion.button 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.2 }}
-          onClick={onFinish}
-          className="mt-8 border border-[#00ff41] py-3 px-6 hover:bg-[#00ff41]/10 active:scale-95 transition-all w-full uppercase tracking-widest"
-        >
-          [ ENTER_ARENA ]
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-};
-
-// --- КОМПОНЕНТ 2: ЭКРАН ИНВЕНТАРЯ (ТВОЙ GOLD DEAGLE) ---
-const Inventory = () => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-    <h2 className="text-2xl font-black italic tracking-tighter">INVENTORY</h2>
-    <div className="relative group overflow-hidden rounded-2xl border-2 border-yellow-500/50 bg-gradient-to-b from-yellow-500/20 to-transparent p-4 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
-      <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,1)]" />
-      <div className="flex justify-between items-start mb-4">
-        <span className="bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded">LEGENDARY</span>
-        <span className="text-yellow-500/50 text-xs">#001</span>
-      </div>
-      <div className="py-8 flex justify-center relative">
-        <div className="absolute inset-0 bg-yellow-500/10 blur-3xl rounded-full" />
-        <img src="https://img.icons8.com/isometric/512/revolver.png" className="w-32 relative z-10 brightness-125 sepia-[.5] hue-rotate-[10deg]" alt="gold deagle" />
-      </div>
-      <p className="text-center font-bold text-lg tracking-tight">GOLD DEAGLE</p>
-      <p className="text-center text-[10px] text-gray-500 uppercase tracking-widest mt-1">Neon Glow Edition</p>
-    </div>
-  </motion.div>
-);
-
-// --- ГЛАВНЫЙ КОМПОНЕНТ ---
-export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('lobby');
-
-  return (
-    <div className="min-h-screen bg-[#0f1014] text-white font-sans selection:bg-yellow-500/30">
-      <AnimatePresence>
-        {loading && <Terminal onFinish={() => setLoading(false)} />}
-      </AnimatePresence>
-
-      {!loading && (
-        <div className="pb-32 p-6 max-w-lg mx-auto">
-          {/* HEADER */}
-          <header className="flex justify-between items-center mb-10">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-500 font-bold tracking-[0.2em]">PROJECT</span>
-              <h1 className="text-2xl font-black italic tracking-tighter text-white">2DUELS</h1>
-            </div>
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 p-1.5 rounded-2xl">
-               <div className="flex items-center gap-1.5 px-2">
-                 <span className="text-yellow-500 text-xs">⭐</span>
-                 <span className="font-bold text-sm text-gray-200">1,250</span>
-               </div>
-               <div className="w-8 h-8 rounded-xl bg-yellow-500 flex items-center justify-center text-black">
-                 <Settings size={16} />
-               </div>
-            </div>
-          </header>
-
-          {/* КОНТЕНТ В ЗАВИСИМОСТИ ОТ ВКЛАДКИ */}
-          <div className="min-h-[50vh]">
-            {activeTab === 'lobby' && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                <div className="bg-gradient-to-r from-yellow-500/20 to-transparent border-l-4 border-yellow-500 p-4 rounded-r-xl mb-6">
-                  <p className="text-[10px] uppercase tracking-widest font-bold opacity-50">Current Event</p>
-                  <h3 className="font-bold text-lg">DAILY ROULETTE x2 XP</h3>
-                </div>
-                
-                {/* КАРТОЧКА ИГРЫ */}
-                <div className="relative overflow-hidden rounded-3xl bg-[#1a1b22] border border-white/5 p-6 group active:scale-[0.98] transition-transform">
-                   <div className="flex justify-between items-center relative z-10">
-                     <div>
-                       <h3 className="text-2xl font-black italic tracking-tighter">RUSSIAN<br/>ROULETTE</h3>
-                       <button className="mt-4 bg-white text-black font-black text-[10px] px-4 py-2 rounded-full uppercase tracking-tighter">Play PvP</button>
-                     </div>
-                     <img src="https://img.icons8.com/isometric/512/revolver.png" className="w-24 group-hover:rotate-12 transition-transform duration-500" alt="gun" />
-                   </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'profile' && (
-               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
-                 <div className="w-24 h-24 bg-white/10 rounded-full mx-auto border-4 border-white/5 flex items-center justify-center">
-                   <User size={40} className="text-gray-500" />
-                 </div>
-                 <h2 className="text-2xl font-bold italic">PLAYER_01</h2>
-                 <div className="grid grid-cols-2 gap-3">
-                   <div className="bg-[#1a1b22] p-4 rounded-2xl border border-white/5">
-                     <p className="text-[10px] text-gray-500 uppercase">Wins</p>
-                     <p className="text-xl font-bold">128</p>
-                   </div>
-                   <div className="bg-[#1a1b22] p-4 rounded-2xl border border-white/5">
-                     <p className="text-[10px] text-gray-500 uppercase">Rank</p>
-                     <p className="text-xl font-bold text-yellow-500">GOLD II</p>
-                   </div>
-                 </div>
-               </motion.div>
-            )}
-
-            {activeTab === 'inventory' && <Inventory />}
-          </div>
-
-          {/* NAVIGATION BAR (ТВОЙ НАВБАР) */}
-          <nav className="fixed bottom-8 left-6 right-6 bg-[#1a1b22]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-4 flex justify-between items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <NavIcon active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} icon={<User size={20}/>} label="User" />
-            <NavIcon active={activeTab === 'lobby'} onClick={() => setActiveTab('lobby')} icon={<LayoutGrid size={20}/>} label="Arena" />
-            
-            {/* Центровая кнопка Рулетки */}
-            <button 
-              onClick={() => setActiveTab('lobby')}
-              className="relative -mt-16 group"
-            >
-              <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="bg-yellow-500 p-5 rounded-[2rem] shadow-xl relative z-10">
-                <Disc size={28} className="text-black animate-[spin_4s_linear_infinite]" />
-              </div>
-            </button>
-
-            <NavIcon active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} icon={<Briefcase size={20}/>} label="Items" />
-            <NavIcon active={false} icon={<Trophy size={20}/>} label="Ranks" />
-          </nav>
+    <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col">
+            <h1 class="text-2xl font-black italic tracking-tighter text-white uppercase">2DUELS</h1>
+            <span class="text-[10px] text-yellow-500 font-bold tracking-[0.3em]">BETA ACCESS</span>
         </div>
-      )}
+        <div class="glass-card px-4 py-2 rounded-2xl flex items-center gap-2">
+            <span class="text-yellow-500">⭐</span>
+            <span class="font-bold tracking-tight">1,250</span>
+        </div>
     </div>
-  );
-}
 
-function NavIcon({ icon, label, active, onClick }) {
-  return (
-    <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-yellow-500 scale-110' : 'text-gray-500 hover:text-white'}`}>
-      {icon}
-      <span className="text-[8px] font-black uppercase tracking-tighter">{label}</span>
-    </button>
-  );
-}
+    <div class="glass-card p-5 rounded-[2rem] mb-8 neon-border">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-tr from-yellow-500 to-yellow-200 rounded-2xl flex items-center justify-center text-black font-bold shadow-lg shadow-yellow-500/20">
+                P1
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Твой ранг</p>
+                <h2 class="text-xl font-black italic">GOLD ELITE</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+        
+        <div onclick="alert('Открываем Мины...')" class="glass-card p-6 rounded-[2.5rem] relative overflow-hidden active:scale-95 transition-transform group">
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black italic leading-none mb-1">MINES</h3>
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">High Multiplier</p>
+            </div>
+            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-20 grayscale group-hover:grayscale-0 transition-all">💣</div>
+        </div>
+
+        <div onclick="alert('Открываем Рулетку...')" class="glass-card p-6 rounded-[2.5rem] relative overflow-hidden active:scale-95 transition-transform group border-l-4 border-red-500/50">
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black italic leading-none mb-1 text-red-500">ROULETTE</h3>
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">PvP Duels</p>
+            </div>
+            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-20 grayscale group-hover:grayscale-0 transition-all">🔫</div>
+        </div>
+
+        <div class="glass-card p-6 rounded-[2.5rem] opacity-50 relative overflow-hidden">
+            <h3 class="text-2xl font-black italic leading-none mb-1">PVP RPS</h3>
+            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest italic">Coming Soon</p>
+            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-10">✊</div>
+        </div>
+
+    </div>
+
+    <nav class="fixed bottom-6 left-6 right-6 glass-card rounded-[2rem] p-3 flex justify-around items-center border border-white/10">
+        <button class="p-3 text-xl opacity-100 text-yellow-500">🏠</button>
+        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">🎒</button>
+        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">🏆</button>
+        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">👤</button>
+    </nav>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: #000000; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            /* Эффект звездного неба */
+            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .main-card {
+            background: #1c1c1e;
+            border-radius: 24px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .main-card:active {
+            transform: scale(0.98);
+            background: #2c2c2e;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8e8e93;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .nav-item.active {
+            color: white;
+        }
+
+        .online-dot {
+            width: 6px;
+            height: 6px;
+            background: #34c759;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div class="p-4">
+        <div class="flex justify-center items-center py-4">
+            <div class="flex items-center text-[13px] font-semibold text-gray-400">
+                <span class="online-dot"></span> 244 онлайн
+            </div>
+        </div>
+
+        <div class="space-y-3 mt-4">
+            
+            <div class="main-card flex justify-between items-center relative overflow-hidden">
+                <div>
+                    <div class="text-[11px] text-gray-500 font-bold mb-1">
+                        <span class="online-dot"></span> 13 онлайн
+                    </div>
+                    <h2 class="text-xl font-bold mb-1 tracking-tight">Lucky</h2>
+                    <p class="text-xs text-gray-400">Приумножай свои гифты</p>
+                </div>
+                <div class="flex gap-1 relative">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-bold border-4 border-black shadow-lg">×2</div>
+                    <div class="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center text-[12px] font-bold border-4 border-black shadow-xl -ml-4">×10</div>
+                </div>
+            </div>
+
+            <div class="main-card flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-gray-500 font-bold mb-1">
+                        <span class="online-dot"></span> 6 онлайн
+                    </div>
+                    <h2 class="text-xl font-bold mb-1 tracking-tight">Моно</h2>
+                    <p class="text-xs text-gray-400">Выбери гифт и попробуй выиграть</p>
+                </div>
+                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2904/2904128.png" class="w-10 h-10 opacity-80" alt="gift">
+                </div>
+            </div>
+
+            <div class="main-card flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-gray-500 font-bold mb-1">
+                        <span class="online-dot"></span> 10 онлайн
+                    </div>
+                    <h2 class="text-xl font-bold mb-1 tracking-tight">Ролл</h2>
+                    <p class="text-xs text-gray-400">Крути чтобы получить подарок</p>
+                </div>
+                <div class="w-14 h-14 bg-green-900/30 rounded-2xl flex items-center justify-center border border-green-500/20">
+                    <span class="text-2xl">🎲</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#000000]/80 backdrop-blur-md border-t border-white/5 flex justify-around py-3 px-2">
+        <div class="nav-item">
+            <span class="text-xl mb-1">⚔️</span>
+            <span>ПвП</span>
+        </div>
+        <div class="nav-item active">
+            <span class="text-xl mb-1">⚙️</span>
+            <span>Соло</span>
+        </div>
+        <div class="nav-item">
+            <span class="text-xl mb-1">🎁</span>
+            <span>Розыгрыши</span>
+        </div>
+        <div class="nav-item">
+            <span class="text-xl mb-1">🏪</span>
+            <span>Магазин</span>
+        </div>
+        <div class="nav-item">
+            <span class="text-xl mb-1">👤</span>
+            <span>Профиль</span>
+        </div>
+    </nav>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; }
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; pointer-events: none; }
+        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
+        .nav-active { color: white !important; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div id="screen-solo" class="p-4 animate-in fade-in duration-300">
+        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> 244 онлайн
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div class="glass-card p-5 flex justify-between items-center active:scale-95 transition-all">
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 13 онлайн</p>
+                    <h2 class="text-xl font-bold mb-0.5">Lucky</h2>
+                    <p class="text-[12px] text-gray-400 font-medium">Приумножай свои гифты</p>
+                </div>
+                <div class="flex -space-x-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[10px] font-black italic shadow-lg">×2</div>
+                    <div class="w-12 h-12 bg-pink-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[12px] font-black italic shadow-xl z-10">×10</div>
+                </div>
+            </div>
+
+            <div class="glass-card p-5 flex justify-between items-center active:scale-95 transition-all">
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 6 онлайн</p>
+                    <h2 class="text-xl font-bold mb-0.5">Моно</h2>
+                    <p class="text-[12px] text-gray-400 font-medium">Выбери гифт и выиграй его</p>
+                </div>
+                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center"><span class="text-3xl">🍇</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-profile" class="p-4 hidden animate-in fade-in duration-300">
+        <div class="flex flex-col items-center mt-6 mb-8">
+            <div class="relative">
+                <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=xdogum" alt="avatar">
+                </div>
+                <div class="absolute -left-8 top-4 bg-[#1c1c1e] px-2 py-1 rounded-lg text-[10px] font-bold border border-white/5">🌸 2</div>
+                <div class="absolute -right-8 top-4 bg-[#1c1c1e] p-2 rounded-lg border border-white/5">⚙️</div>
+            </div>
+            <h2 class="text-xl font-bold mt-4 tracking-tight">@xdogum</h2>
+        </div>
+
+        <div class="glass-card p-5 mb-4">
+            <p class="text-[11px] text-gray-500 font-bold mb-3 uppercase tracking-widest">Rolls баланс</p>
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-[10px]">💎</div>
+                    <span class="text-xl font-bold tracking-tight">0 TON</span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="bg-[#007aff] px-5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all">Пополнить</button>
+                    <button class="bg-[#2c2c2e] p-2.5 rounded-xl active:scale-95">📋</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card overflow-hidden">
+            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
+                <div class="flex items-center gap-3"><span class="text-xl">🎁</span> <span class="text-[14px] font-semibold">Инвентарь подарков</span></div>
+                <div class="flex items-center gap-2"><span class="bg-pink-600 px-2 py-0.5 rounded-full text-[10px] font-black">0</span> ❯</div>
+            </div>
+            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
+                <div class="flex items-center gap-3"><span class="text-xl">📜</span> <span class="text-[14px] font-semibold">Задания</span></div>
+                <div class="flex items-center gap-2"><span class="bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full text-[10px] font-bold border border-orange-500/30">0/22</span> ❯</div>
+            </div>
+            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
+                <div class="flex items-center gap-3"><span class="text-xl">💎</span> <span class="text-[14px] font-semibold">Рефералы</span></div>
+                <span class="text-gray-600 font-bold tracking-tighter">❯</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-4 z-50">
+        <button onclick="showScreen('solo')" id="nav-solo" class="nav-item nav-active flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">⚔️</span><span class="text-[10px] font-bold">ПвП</span>
+        </button>
+        <button onclick="showScreen('solo')" id="nav-solo" class="nav-item nav-active flex flex-col items-center gap-1 text-white">
+            <span class="text-xl">⚙️</span><span class="text-[10px] font-bold">Соло</span>
+        </button>
+        <button class="nav-item flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">🎁</span><span class="text-[10px] font-bold">Розыгрыши</span>
+        </button>
+        <button onclick="showScreen('profile')" id="nav-profile" class="nav-item flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">👤</span><span class="text-[10px] font-bold">Профиль</span>
+        </button>
+    </nav>
+
+    <script>
+        function showScreen(screenId) {
+            // Прячем все экраны
+            document.getElementById('screen-solo').classList.add('hidden');
+            document.getElementById('screen-profile').classList.add('hidden');
+            
+            // Показываем нужный
+            document.getElementById('screen-' + screenId).classList.remove('hidden');
+            
+            // Обновляем иконки в навигации
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('text-white'));
+            navItems.forEach(item => item.classList.add('text-gray-500'));
+            
+            document.getElementById('nav-' + screenId).classList.add('text-white');
+            document.getElementById('nav-' + screenId).classList.remove('text-gray-500');
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; transition: background 0.5s; }
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; pointer-events: none; }
+        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
+        .hidden { display: none; }
+        
+        /* Анимация вращения для Lucky */
+        @keyframes spinWheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(1440deg); }
+        }
+        .spinning { animation: spinWheel 3s cubic-bezier(0.15, 0, 0.15, 1) forwards; }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div id="screen-solo" class="p-4">
+        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> 244 онлайн
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div onclick="openGame('lucky')" class="glass-card p-5 flex justify-between items-center active:scale-95 cursor-pointer">
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 13 онлайн</p>
+                    <h2 class="text-xl font-bold mb-0.5 text-white">Lucky</h2>
+                    <p class="text-[12px] text-gray-400 font-medium">Приумножай свои гифты</p>
+                </div>
+                <div class="flex -space-x-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[10px] font-black italic shadow-lg">×2</div>
+                    <div class="w-12 h-12 bg-pink-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[12px] font-black italic shadow-xl z-10">×10</div>
+                </div>
+            </div>
+            <div class="glass-card p-5 flex justify-between items-center opacity-50">
+                <div><h2 class="text-xl font-bold">Моно</h2><p class="text-xs text-gray-400 font-medium">Coming soon...</p></div>
+                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center">🍇</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game-lucky" class="p-4 hidden flex flex-col items-center">
+        <div class="w-full flex justify-between items-center py-4">
+            <button onclick="showScreen('solo')" class="text-gray-400 text-sm font-bold">✕ Закрыть</button>
+            <div class="text-[13px] font-medium text-green-500">● 13 онлайн</div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="relative mt-10 mb-10">
+            <div id="pointer" class="absolute -top-4 left-1/2 -translate-x-1/2 z-20 text-3xl">▼</div>
+            <div id="wheel" class="w-64 h-64 rounded-full border-8 border-[#1c1c1e] bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-600 shadow-[0_0_50px_rgba(147,51,234,0.3)] relative overflow-hidden transition-all">
+                <div class="absolute inset-0 flex items-center justify-center font-black italic text-4xl opacity-20">LUCKY</div>
+                <div class="absolute top-0 left-1/2 w-1 h-full bg-black/20 -translate-x-1/2"></div>
+                <div class="absolute left-0 top-1/2 w-full h-1 bg-black/20 -translate-y-1/2"></div>
+            </div>
+        </div>
+
+        <h2 id="lucky-status" class="text-2xl font-black italic mb-8 uppercase tracking-tighter">Сделай ставку</h2>
+
+        <div class="w-full glass-card p-6 mt-auto">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-gray-500 font-bold text-xs uppercase tracking-widest">Ставка:</span>
+                <span id="bet-amount" class="text-xl font-black italic text-blue-500">100 ⭐</span>
+            </div>
+            <button onclick="playLucky()" id="lucky-btn" class="w-full bg-[#007aff] py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                Крутить
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-profile" class="p-4 hidden">
+        <h2 class="text-center mt-20 text-gray-500 font-bold">Профиль в разработке...</h2>
+    </div>
+
+    <nav id="navbar" class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-4 z-50">
+        <button onclick="showScreen('solo')" class="nav-btn flex flex-col items-center gap-1 text-white">
+            <span class="text-xl">⚙️</span><span class="text-[10px] font-bold">Соло</span>
+        </button>
+        <button onclick="showScreen('profile')" class="nav-btn flex flex-col items-center gap-1 text-gray-500">
+            <span class="text-xl">👤</span><span class="text-[10px] font-bold">Профиль</span>
+        </button>
+    </nav>
+
+    <script>
+        let isPlaying = false;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + screenId).classList.remove('hidden');
+            document.getElementById('navbar').classList.remove('hidden');
+        }
+
+        function openGame(gameId) {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-game-' + gameId).classList.remove('hidden');
+            document.getElementById('navbar').classList.add('hidden'); // Прячем навбар в игре
+        }
+
+        function playLucky() {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            const wheel = document.getElementById('wheel');
+            const btn = document.getElementById('lucky-btn');
+            const status = document.getElementById('lucky-status');
+
+            wheel.classList.remove('spinning');
+            void wheel.offsetWidth; // Reset animation
+            wheel.classList.add('spinning');
+            
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            status.innerText = "УДАЧИ...";
+            status.style.color = "white";
+
+            setTimeout(() => {
+                const win = Math.random() > 0.5;
+                isPlaying = false;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+
+                if (win) {
+                    status.innerText = "ВЫИГРЫШ! +200 ⭐";
+                    status.style.color = "#34c759";
+                    document.body.style.background = "#051a05";
+                } else {
+                    status.innerText = "ПРОИГРЫШ... 💀";
+                    status.style.color = "#ff3b30";
+                    document.body.style.background = "#1a0505";
+                }
+                setTimeout(() => { document.body.style.background = "#000"; }, 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; }
+        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
+        .hidden { display: none; }
+        @keyframes spinWheel { from { transform: rotate(0deg); } to { transform: rotate(1440deg); } }
+        .spinning { animation: spinWheel 3s cubic-bezier(0.15, 0, 0.15, 1) forwards; }
+    </style>
+</head>
+<body>
+    <div id="screen-solo" class="p-4">
+        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> <span id="online-count">...</span> онлайн
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div onclick="openGame('lucky')" class="glass-card p-5 flex justify-between items-center active:scale-95 cursor-pointer">
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> <span id="game-lucky-online">0</span> онлайн</p>
+                    <h2 class="text-xl font-bold mb-0.5">Lucky</h2>
+                    <p class="text-[12px] text-gray-400 font-medium">PvP Сражение за TON</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-black italic border-4 border-black">×2</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game-lucky" class="p-4 hidden flex flex-col items-center">
+        <div class="w-full flex justify-between items-center py-4">
+            <button onclick="showScreen('solo')" class="text-gray-400 text-sm font-bold">✕ Выйти</button>
+            <div id="pvp-status" class="text-[11px] font-bold text-blue-500 uppercase tracking-widest animate-pulse">Поиск игрока...</div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="relative mt-10 mb-10">
+            <div id="wheel" class="w-64 h-64 rounded-full border-8 border-[#1c1c1e] bg-gradient-to-tr from-blue-600 to-purple-600 shadow-2xl relative">
+                <div class="absolute inset-0 flex items-center justify-center font-black italic opacity-20">PvP</div>
+            </div>
+        </div>
+
+        <div id="player-vs" class="flex gap-10 items-center mb-8">
+            <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full mb-2 border border-blue-500"></div><p class="text-[10px] font-bold text-blue-400">ВЫ</p></div>
+            <div class="text-xl font-black italic text-gray-700">VS</div>
+            <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full mb-2 border border-dashed border-gray-600"></div><p class="text-[10px] font-bold text-gray-600">?</p></div>
+        </div>
+
+        <button id="lucky-btn" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-[1.5rem] font-black uppercase tracking-widest transition-all">
+            Ждем противника
+        </button>
+    </div>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        .glass { background: #1c1c1e; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); }
+        .hidden { display: none; }
+        .mine-cell { aspect-ratio: 1/1; display: flex; items-center; justify-center; font-size: 24px; cursor: pointer; }
+        .mine-cell.active { background: #2c2c2e; transform: scale(0.95); }
+        .mine-cell.win { background: rgba(52, 199, 89, 0.2); border-color: #34c759; box-shadow: 0 0 15px rgba(52, 199, 89, 0.2); }
+        .mine-cell.lose { background: rgba(255, 59, 48, 0.2); border-color: #ff3b30; box-shadow: 0 0 15px rgba(255, 59, 48, 0.2); }
+    </style>
+</head>
+<body>
+
+    <div id="screen-solo" class="p-4">
+        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
+            <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-1"></span> <span id="online-total">...</span> онлайн
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div onclick="openMines()" class="glass p-5 flex justify-between items-center active:scale-95 transition-all">
+                <div>
+                    <h2 class="text-xl font-bold italic tracking-tight uppercase leading-none mb-1">Mines 3x3</h2>
+                    <p class="text-[11px] text-gray-400 font-medium">Найди подарок, избегай мин</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">💣</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-mines" class="p-4 hidden animate-in fade-in duration-300">
+        <div class="flex justify-between items-center py-4">
+            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Назад</button>
+            <div class="text-orange-500 font-black italic">MINES 3X3</div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mt-10 w-full max-w-[320px] mx-auto" id="mines-grid">
+            </div>
+
+        <div class="mt-10 w-full max-w-[320px] mx-auto space-y-4">
+            <div class="glass p-4 flex justify-between items-center">
+                <span class="text-gray-500 text-xs font-bold uppercase">Множитель:</span>
+                <span id="multiplier" class="text-xl font-black italic text-orange-500">x1.00</span>
+            </div>
+            
+            <button id="cashout-btn" onclick="cashout()" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest transition-all">
+                Забрать выигрыш
+            </button>
+            
+            <button id="start-mines-btn" onclick="startGame()" class="w-full bg-orange-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-orange-600/20">
+                Новая игра (100 ⭐)
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+            storageBucket: "duels-1fb6b.firebasestorage.app",
+            messagingSenderId: "745698956226",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const myId = "user_" + Math.floor(Math.random() * 9999);
+        set(ref(db, 'online/' + myId), true);
+        onDisconnect(ref(db, 'online/' + myId)).remove();
+        onValue(ref(db, 'online'), (s) => {
+            document.getElementById('online-total').innerText = (s.exists() ? Object.keys(s.val()).length : 0) + 120;
+        });
+        let mines = [];
+        let revealed = [];
+        let isGameOver = true;
+        let currentMult = 1.0;
+
+        window.openMines = () => {
+            document.getElementById('screen-solo').classList.add('hidden');
+            document.getElementById('screen-mines').classList.remove('hidden');
+            initGrid();
+        };
+
+        window.showScreen = (id) => {
+            document.getElementById('screen-mines').classList.add('hidden');
+            document.getElementById('screen-solo').classList.remove('hidden');
+        };
+
+        function initGrid() {
+            const grid = document.getElementById('mines-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'glass mine-cell';
+                cell.onclick = () => clickCell(i, cell);
+                grid.appendChild(cell);
+            }
+        }
+
+        window.startGame = () => {
+            isGameOver = false;
+            revealed = [];
+            currentMult = 1.0;
+            updateUI();
+            
+            // Генерируем 2 мины на поле 3х3
+            mines = [];
+            while(mines.length < 2) {
+                let r = Math.floor(Math.random() * 9);
+                if(!mines.includes(r)) mines.push(r);
+            }
+            
+            initGrid();
+            document.getElementById('start-mines-btn').classList.add('hidden');
+            document.getElementById('cashout-btn').disabled = false;
+            document.getElementById('cashout-btn').className = "w-full bg-green-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95";
+        };
+
+        function clickCell(index, element) {
+            if (isGameOver || revealed.includes(index)) return;
+            
+            revealed.push(index);
+            if (mines.includes(index)) {
+                // ВЗРЫВ
+                element.classList.add('lose');
+                element.innerText = '💣';
+                gameOver(false);
+            } else {
+                // ПОПАЛ
+                element.classList.add('win');
+                element.innerText = '💎';
+                currentMult += 0.5;
+                updateUI();
+                if (revealed.length === 7) gameOver(true); // Все открыты кроме мин
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('multiplier').innerText = `x${currentMult.toFixed(2)}`;
+        }
+
+        function gameOver(win) {
+            isGameOver = true;
+            document.getElementById('start-mines-btn').classList.remove('hidden');
+            document.getElementById('cashout-btn').disabled = true;
+            document.getElementById('cashout-btn').className = "w-full bg-gray-800 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest";
+            if (!win) alert("БУМ! Ты проиграл.");
+        }
+
+        window.cashout = () => {
+            if (isGameOver) return;
+            alert(`Забрал выигрыш с коэффициентом ${currentMult.toFixed(2)}!`);
+            gameOver(true);
+        };
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .hidden { display: none; }
+        .rps-btn { aspect-ratio: 1/1; display: flex; flex-direction: column; items-center; justify-center; border-radius: 20px; transition: 0.2s; border: 2px solid transparent; }
+        .rps-btn:active { transform: scale(0.9); }
+        .rps-btn.selected { border-color: #007aff; background: rgba(0, 122, 255, 0.1); }
+        @keyframes vs-glow { 0% { text-shadow: 0 0 5px #fff; } 50% { text-shadow: 0 0 20px #007aff; } 100% { text-shadow: 0 0 5px #fff; } }
+        .vs-text { animation: vs-glow 2s infinite; font-style: italic; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-solo" class="p-4">
+        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
+            <span id="online-total">...</span> ОНЛАЙН
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div onclick="openMines()" class="glass p-5 flex justify-between items-center active:scale-95">
+                <div><h2 class="text-xl font-bold italic uppercase leading-none mb-1">Mines 3x3</h2><p class="text-[11px] text-gray-400">Соло режим</p></div>
+                <div class="text-2xl">💣</div>
+            </div>
+
+            <div onclick="openRPS()" class="glass p-5 flex justify-between items-center active:scale-95 border-l-4 border-blue-500">
+                <div>
+                    <h2 class="text-xl font-bold italic uppercase leading-none mb-1">PvP Дуэль</h2>
+                    <p class="text-[11px] text-gray-400">Камень, Ножницы, Бумага</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-600/20">✊</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-rps" class="p-4 hidden">
+        <div class="flex justify-between items-center py-4 mb-10">
+            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Выйти</button>
+            <div class="text-blue-500 font-black italic tracking-tighter uppercase">Arena 1v1</div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="flex justify-around items-center mb-16 relative">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-blue-600 rounded-full border-4 border-black shadow-xl mb-2 flex items-center justify-center text-3xl">👤</div>
+                <p class="text-xs font-bold uppercase">Вы</p>
+            </div>
+            <div class="text-4xl vs-text text-white">VS</div>
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gray-800 rounded-full border-4 border-black shadow-xl mb-2 flex items-center justify-center text-3xl opacity-50">?</div>
+                <p class="text-xs font-bold uppercase text-gray-600">Оппонент</p>
+            </div>
+        </div>
+
+        <h3 id="rps-status" class="text-center text-gray-400 font-bold uppercase text-xs mb-6 tracking-widest">Сделай свой выбор:</h3>
+
+        <div class="grid grid-cols-3 gap-4 mb-10">
+            <div onclick="selectRPS('rock')" id="btn-rock" class="glass rps-btn bg-[#1c1c1e]">
+                <span class="text-3xl mb-2">✊</span>
+                <span class="text-[10px] font-bold uppercase text-gray-500">Камень</span>
+            </div>
+            <div onclick="selectRPS('paper')" id="btn-paper" class="glass rps-btn bg-[#1c1c1e]">
+                <span class="text-3xl mb-2">✋</span>
+                <span class="text-[10px] font-bold uppercase text-gray-500">Бумага</span>
+            </div>
+            <div onclick="selectRPS('scissors')" id="btn-scissors" class="glass rps-btn bg-[#1c1c1e]">
+                <span class="text-3xl mb-2">✌️</span>
+                <span class="text-[10px] font-bold uppercase text-gray-500">Ножницы</span>
+            </div>
+        </div>
+
+        <button id="rps-confirm" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-3xl font-black uppercase tracking-widest transition-all">
+            Подтвердить ход
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+            storageBucket: "duels-1fb6b.firebasestorage.app",
+            messagingSenderId: "745698956226",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const myId = "user_" + Math.floor(Math.random() * 9999);
+
+        // Навигация
+        window.openRPS = () => {
+            document.getElementById('screen-solo').classList.add('hidden');
+            document.getElementById('screen-rps').classList.remove('hidden');
+        };
+        window.showScreen = (id) => {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + id).classList.remove('hidden');
+        };
+
+        // Логика выбора КНБ
+        let currentChoice = null;
+        window.selectRPS = (choice) => {
+            currentChoice = choice;
+            document.querySelectorAll('.rps-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-' + choice).classList.add('selected');
+            
+            const btn = document.getElementById('rps-confirm');
+            btn.disabled = false;
+            btn.classList.replace('bg-gray-800', 'bg-blue-600');
+            btn.classList.replace('text-gray-500', 'text-white');
+            btn.innerText = "ГОТОВ!";
+        };
+
+        // Онлайн для массовки
+        onValue(ref(db, 'online'), (s) => {
+            document.getElementById('online-total').innerText = (s.exists() ? Object.keys(s.val()).length : 0) + 142;
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .hidden { display: none; }
+        
+        /* Анимация монетки */
+        .coin-container { width: 150px; height: 150px; perspective: 1000px; margin: 40px auto; }
+        .coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.2, 1, 0.3, 1); }
+        .coin-side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 50px; border: 6px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
+        .side-a { background: linear-gradient(45deg, #ffd700, #b8860b); }
+        .side-b { background: linear-gradient(45deg, #ffd700, #b8860b); transform: rotateY(180deg); }
+        
+        .flipping { animation: spin 0.5s linear infinite; }
+        @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="screen-solo" class="p-4">
+        <div class="text-center py-6">
+            <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest"><span class="text-green-500">●</span> <span id="online-count">142</span> онлайн</p>
+        </div>
+        
+        <div class="space-y-3">
+            <div onclick="openCoinFlip()" class="glass p-6 flex justify-between items-center active:scale-95 border-l-4 border-yellow-500 transition-all">
+                <div>
+                    <h2 class="text-xl font-bold italic uppercase tracking-tighter">Coin Flip PvP</h2>
+                    <p class="text-[11px] text-gray-400">50/50: Удвой за секунду</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-2xl shadow-lg border-4 border-black">🪙</div>
+            </div>
+            
+            <div class="glass p-6 flex justify-between items-center opacity-50 grayscale">
+                <div><h2 class="text-xl font-bold italic uppercase tracking-tighter">Dice Roll</h2><p class="text-[11px] text-gray-400">Скоро в главе 10</p></div>
+                <div class="text-2xl">🎲</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-coin" class="p-4 hidden">
+        <div class="flex justify-between items-center py-4">
+            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Назад</button>
+            <div class="text-yellow-500 font-black italic uppercase">Coin Flip PvP</div>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="coin-container">
+            <div id="coin" class="coin">
+                <div class="coin-side side-a">🦅</div>
+                <div class="coin-side side-b">🪙</div>
+            </div>
+        </div>
+
+        <div id="flip-status" class="text-center mb-8 font-black italic text-xl uppercase">Выбери сторону:</div>
+
+        <div class="flex gap-4 mb-10">
+            <button onclick="chooseSide('heads')" class="flex-1 glass p-6 active:scale-95 border-2 border-transparent hover:border-yellow-500 transition-all">
+                <div class="text-3xl mb-2">🦅</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase">Орел</div>
+            </button>
+            <button onclick="chooseSide('tails')" class="flex-1 glass p-6 active:scale-95 border-2 border-transparent hover:border-yellow-500 transition-all">
+                <div class="text-3xl mb-2">🪙</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase">Решка</div>
+            </button>
+        </div>
+
+        <button id="play-coin" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-[20px] font-black uppercase tracking-widest transition-all">
+            Ищем соперника...
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // КЛЮЧИ НА МЕСТЕ
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+            storageBucket: "duels-1fb6b.firebasestorage.app",
+            messagingSenderId: "745698956226",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const myId = "u" + Math.floor(Math.random() * 999);
+
+        window.openCoinFlip = () => {
+            document.getElementById('screen-solo').classList.add('hidden');
+            document.getElementById('screen-coin').classList.remove('hidden');
+        };
+
+        window.showScreen = (id) => {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + id).classList.remove('hidden');
+        };
+
+        let selectedSide = null;
+        window.chooseSide = (side) => {
+            selectedSide = side;
+            document.getElementById('flip-status').innerText = "Твой выбор: " + (side === 'heads' ? "Орел" : "Решка");
+            const btn = document.getElementById('play-coin');
+            btn.disabled = false;
+            btn.className = "w-full bg-yellow-500 text-black py-5 rounded-[20px] font-black uppercase tracking-widest active:scale-95";
+            btn.innerText = "БРОСИТЬ МОНЕТУ";
+        };
+
+        window.playCoin = () => {
+            const coin = document.getElementById('coin');
+            coin.classList.add('flipping');
+            
+            setTimeout(() => {
+                coin.classList.remove('flipping');
+                const result = Math.random() > 0.5 ? 'heads' : 'tails';
+                const rotation = result === 'heads' ? 0 : 180;
+                coin.style.transform = `rotateY(${1800 + rotation}deg)`;
+                
+                setTimeout(() => {
+                    if (result === selectedSide) {
+                        document.getElementById('flip-status').innerText = "ПОБЕДА! +200 ⭐";
+                        document.getElementById('flip-status').style.color = "#34c759";
+                    } else {
+                        document.getElementById('flip-status').innerText = "ПРОИГРЫШ... 💀";
+                        document.getElementById('flip-status').style.color = "#ff3b30";
+                    }
+                }, 3000);
+            }, 1000);
+        };
+        
+        // Кнопка в JS
+        document.getElementById('play-coin').onclick = window.playCoin;
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 90px; }
+        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .hidden { display: none; }
+        .nav-item { opacity: 0.4; transition: 0.3s; cursor: pointer; }
+        .nav-item.active { opacity: 1; color: #007aff; }
+        
+        /* Свечение для надписи */
+        .coming-soon-glow {
+            text-shadow: 0 0 15px rgba(0, 122, 255, 0.6);
+            letter-spacing: 0.15em;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="screen-solo" class="p-4">
+        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
+            <span class="text-green-500">●</span> <span id="online-total">142</span> онлайн
+        </div>
+        
+        <div class="space-y-3 mt-4">
+            <div onclick="alert('Lucky PvP coming soon in next update!')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all">
+                <div>
+                    <h2 class="text-xl font-black italic uppercase leading-none mb-1">Lucky</h2>
+                    <p class="text-[11px] text-gray-400 font-medium tracking-tight">PvP Battle for TON</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-600/20">×2</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-market" class="hidden min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
+        <div class="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20">
+            <span class="text-4xl">🏪</span>
+        </div>
+        <h1 class="text-5xl font-black italic uppercase mb-2 coming-soon-glow">MARKET</h1>
+        <p class="text-blue-500 font-bold tracking-[0.4em] uppercase text-[10px]">Coming Soon</p>
+        
+        <div class="mt-12 glass p-6 w-full max-w-[280px]">
+            <p class="text-gray-400 text-[12px] font-medium leading-relaxed">
+                The global marketplace is currently under development. <br><br> 
+                <span class="text-white">Stay tuned for updates!</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="screen-profile" class="hidden p-6">
+        <div class="flex flex-col items-center mb-8">
+            <div class="w-20 h-20 bg-gray-800 rounded-full border-2 border-white/10 mb-4"></div>
+            <h2 class="text-xl font-black italic uppercase">@player_one</h2>
+        </div>
+        <div class="glass p-6">
+            <p class="text-gray-500 text-[10px] font-bold uppercase mb-1">Current Balance</p>
+            <p class="text-3xl font-black italic">1,250 ⭐</p>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-5 px-4 z-50">
+        <div onclick="showTab('solo')" id="nav-solo" class="nav-item active flex flex-col items-center gap-1">
+            <span class="text-xl">⚙️</span>
+            <span class="text-[9px] font-bold uppercase tracking-tighter">Solo</span>
+        </div>
+        <div onclick="showTab('market')" id="nav-market" class="nav-item flex flex-col items-center gap-1">
+            <span class="text-xl">🏪</span>
+            <span class="text-[9px] font-bold uppercase tracking-tighter">Market</span>
+        </div>
+        <div onclick="showTab('profile')" id="nav-profile" class="nav-item flex flex-col items-center gap-1">
+            <span class="text-xl">👤</span>
+            <span class="text-[9px] font-bold uppercase tracking-tighter">Profile</span>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+            authDomain: "duels-1fb6b.firebaseapp.com",
+            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+            projectId: "duels-1fb6b",
+            storageBucket: "duels-1fb6b.firebasestorage.app",
+            messagingSenderId: "745698956226",
+            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Навигация
+        window.showTab = (tabId) => {
+            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('nav-' + tabId).classList.add('active');
+        };
+
+        // Реальный онлайн из твоей базы
+        onValue(ref(db, 'online'), (s) => {
+            const count = s.exists() ? Object.keys(s.val()).length : 0;
+            document.getElementById('online-total').innerText = count + 140;
+        });
+    </script>
+
+</body>
+</html>
