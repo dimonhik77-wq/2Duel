@@ -968,169 +968,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0b0e11; color: white; font-family: sans-serif; overflow: hidden; margin: 0; }
-        .screen { display: none; height: 100vh; overflow-y: auto; padding-bottom: 120px; }
-        .active { display: block; }
+        body { background: #0b0e11; color: white; font-family: sans-serif; margin: 0; padding: 0; user-select: none; }
+        .screen { display: none; padding: 20px; padding-bottom: 100px; }
+        .screen.active { display: block; }
         
-        /* Дизайн карточек и стекла */
-        .glass { background: rgba(22, 26, 30, 0.7); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(15px); border-radius: 24px; }
-        .ui-card { background: #161a1e; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
-        .ui-card:active { transform: scale(0.98); }
-
-        /* Анимация плавного появления */
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Колесо из твоего скрина */
-        .wheel-glow { filter: drop-shadow(0 0 25px rgba(214, 26, 129, 0.15)); }
+        /* Стиль карточек */
+        .card { background: #161a1e; border: 1px solid #252a30; border-radius: 18px; padding: 15px; }
         
-        /* Нижний бар */
-        .tab-bar { background: rgba(11, 14, 17, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        /* Колесо (простая CSS имитация) */
+        .wheel-wrap { 
+            width: 260px; height: 260px; margin: 20px auto; 
+            border-radius: 50%; border: 8px solid #1c2127; position: relative;
+            background: conic-gradient(#d61a81 0% 65%, #6366f1 65% 85%, #06b6d4 85% 100%);
+        }
+        .wheel-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: #000; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 900;
+        }
+
+        /* Нижнее меню */
+        .nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #0b0e11; border-top: 1px solid #252a30;
+            display: flex; justify-content: space-around; padding: 15px 0;
+        }
+        .nav-btn { opacity: 0.4; text-align: center; background: none; border: none; color: white; }
+        .nav-btn.active { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div id="home" class="screen active fade-in">
-        <div class="p-4 flex justify-center">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full mt-2">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></span>
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">227 онлайн</span>
+    <div id="home" class="screen active">
+        <div class="text-center mb-6">
+            <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-3 py-1 rounded-full border border-green-500/20">● 227 ОНЛАЙН</span>
+        </div>
+
+        <div class="flex gap-2 mb-6">
+            <div class="card flex-1 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-orange-500"></div>
+                <div class="text-[10px] font-bold">@Magikmoney<br><span class="text-blue-400">+0 TON</span></div>
+            </div>
+            <div class="card flex-1 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600"></div>
+                <div class="text-[10px] font-bold truncate">@giftgambler<br><span class="text-yellow-500">+48603 TON</span></div>
             </div>
         </div>
 
-        <div class="px-5 py-2 flex gap-3">
-            <div class="ui-card flex-1 p-3 flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-orange-500 flex-shrink-0 border border-white/10"></div>
-                <div class="overflow-hidden">
-                    <p class="text-[9px] text-gray-500 font-bold truncate">@Magikmoney</p>
-                    <p class="text-[11px] font-black text-blue-400">+0 TON</p>
-                </div>
-            </div>
-            <div class="ui-card flex-1 p-3 flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-blue-600 flex-shrink-0 border border-white/10"></div>
-                <div class="overflow-hidden">
-                    <p class="text-[9px] text-gray-500 font-bold truncate">@giftgambler_a...</p>
-                    <p class="text-[11px] font-black text-yellow-500">+48603 TON</p>
-                </div>
-            </div>
+        <div class="wheel-wrap">
+            <div class="wheel-center text-xl italic">00:00</div>
         </div>
 
-        <div class="text-center py-4">
-            <div class="inline-block bg-[#1c2127] px-6 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest">
-                Всего <span class="text-blue-400 ml-1">2.67 TON</span>
-            </div>
-        </div>
-
-        <div class="relative w-[300px] h-[300px] mx-auto wheel-glow my-4">
-            <div class="absolute -top-1 left-1/2 -translate-x-1/2 z-20 w-5 h-7 bg-white" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
-            <div class="absolute inset-0 flex items-center justify-center">
-                <div class="w-24 h-24 bg-black rounded-full border-[6px] border-[#1c2127] flex items-center justify-center">
-                    <span class="text-2xl font-black italic tracking-tighter">00:00</span>
-                </div>
-            </div>
-            <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#d61a81" stroke-width="12" stroke-dasharray="65 100" />
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#6366f1" stroke-width="12" stroke-dasharray="20 100" stroke-dashoffset="-65" />
-                <circle cx="50" cy="50" r="44" fill="none" stroke="#06b6d4" stroke-width="12" stroke-dasharray="15 100" stroke-dashoffset="-85" />
-            </svg>
-        </div>
-
-        <div class="px-7 grid grid-cols-2 gap-4 mt-8">
-            <button class="ui-card py-5 text-[11px] font-black uppercase tracking-widest">+ Добавить в ПвП</button>
-            <button class="bg-blue-600 rounded-[22px] py-5 text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">🚀 4.07 TON</button>
+        <div class="grid grid-cols-2 gap-3 mt-10">
+            <button class="card font-bold uppercase text-[11px]">+ Добавить в PvP</button>
+            <button class="bg-blue-600 rounded-[18px] font-black uppercase text-[11px] shadow-lg shadow-blue-600/30">🚀 4.07 TON</button>
         </div>
     </div>
 
-    <div id="games" class="screen fade-in p-6">
-        <h2 class="text-2xl font-black italic uppercase mb-8">Игровой зал</h2>
-        <div class="grid gap-4">
-            <div class="ui-card p-5 flex items-center justify-between border-l-4 border-yellow-500">
-                <div class="flex items-center gap-4">
-                    <span class="text-2xl">🪙</span>
-                    <div><p class="font-black uppercase text-sm italic">Орел и решка</p><p class="text-[9px] text-gray-500 uppercase">Дуэль 1 на 1</p></div>
-                </div>
-                <button class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-bold">ИГРАТЬ</button>
+    <div id="games" class="screen">
+        <h2 class="text-xl font-black italic uppercase mb-6">Каталог игр</h2>
+        <div class="space-y-3">
+            <div class="card flex justify-between items-center">
+                <span class="font-bold">🪙 Орел и Решка</span>
+                <button class="text-[10px] bg-blue-600 px-4 py-2 rounded-lg font-bold">ИГРАТЬ</button>
             </div>
-            <div class="ui-card p-5 flex items-center justify-between border-l-4 border-red-600">
-                <div class="flex items-center gap-4">
-                    <span class="text-2xl">🔫</span>
-                    <div><p class="font-black uppercase text-sm italic">Русская рулетка</p><p class="text-[9px] text-gray-500 uppercase">Игра на выживание</p></div>
-                </div>
-                <button class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-bold">ИГРАТЬ</button>
+            <div class="card flex justify-between items-center">
+                <span class="font-bold">🔫 Русская Рулетка</span>
+                <button class="text-[10px] bg-blue-600 px-4 py-2 rounded-lg font-bold">ИГРАТЬ</button>
             </div>
-            <div class="ui-card p-5 flex items-center justify-between border-l-4 border-blue-500">
-                <div class="flex items-center gap-4">
-                    <span class="text-2xl">✌️</span>
-                    <div><p class="font-black uppercase text-sm italic">КНБ</p><p class="text-[9px] text-gray-500 uppercase">Тактическая битва</p></div>
-                </div>
-                <button class="bg-white/5 px-4 py-2 rounded-xl text-[10px] font-bold">ИГРАТЬ</button>
+            <div class="card flex justify-between items-center">
+                <span class="font-bold">✌️ КНБ</span>
+                <button class="text-[10px] bg-blue-600 px-4 py-2 rounded-lg font-bold">ИГРАТЬ</button>
             </div>
         </div>
     </div>
 
-    <div id="shop" class="screen fade-in p-6">
-        <h2 class="text-2xl font-black italic uppercase mb-8">Магазин</h2>
-        <div class="glass p-8 text-center border-dashed border-2 border-white/10">
-            <div class="text-5xl mb-4">🏪</div>
-            <p class="text-sm font-black italic uppercase mb-2">Эксклюзивные скины</p>
-            <p class="text-[10px] text-gray-400 uppercase leading-relaxed px-4">Секция в разработке. Здесь появятся уникальные эффекты для рулетки!</p>
+    <div id="market" class="screen">
+        <h2 class="text-xl font-black italic uppercase mb-6">Маркет</h2>
+        <div class="card text-center py-10">
+            <div class="text-4xl mb-4">🏪</div>
+            <p class="text-gray-400 text-sm">Магазин скоро откроется!</p>
         </div>
     </div>
 
-    <div id="profile" class="screen fade-in p-6">
-        <div class="flex items-center gap-5 mb-10 bg-white/5 p-6 rounded-[30px] border border-white/5">
-            <div class="w-20 h-20 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-3xl shadow-2xl"></div>
+    <div id="profile" class="screen">
+        <h2 class="text-xl font-black italic uppercase mb-6">Профиль</h2>
+        <div class="card flex items-center gap-4 mb-4">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl"></div>
             <div>
-                <h3 class="text-2xl font-black italic uppercase leading-none mb-1">Игрок</h3>
-                <p class="text-xs font-bold text-blue-500 uppercase tracking-widest">Германия, Штутгарт 🇩🇪</p>
+                <p class="font-black text-lg italic">ИГРОК</p>
+                <p class="text-xs text-gray-500">Штутгарт, DE 🇩🇪</p>
             </div>
         </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-            <div class="ui-card p-5 text-center">
-                <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Побед</p>
-                <p class="text-xl font-black italic">142</p>
-            </div>
-            <div class="ui-card p-5 text-center">
-                <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Баланс</p>
-                <p class="text-xl font-black italic text-yellow-500">1,250 ⭐</p>
-            </div>
+        <div class="card text-center italic font-bold">
+            БАЛАНС: 1,250 ⭐
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 tab-bar flex justify-around py-5 px-2 z-50">
-        <button onclick="nav('home')" id="btn-home" class="flex flex-col items-center gap-1 opacity-100 transition-all duration-300">
-            <span class="text-2xl">⚔️</span>
-            <span class="text-[9px] font-black uppercase tracking-tighter">ПвП</span>
+    <div class="nav">
+        <button onclick="show('home')" class="nav-btn active" id="n-home">
+            <div class="text-xl">⚔️</div><div class="text-[9px] font-bold uppercase mt-1">ПвП</div>
         </button>
-        <button onclick="nav('games')" id="btn-games" class="flex flex-col items-center gap-1 opacity-40 transition-all duration-300">
-            <span class="text-2xl">🎰</span>
-            <span class="text-[9px] font-black uppercase tracking-tighter">Соло</span>
+        <button onclick="show('games')" class="nav-btn" id="n-games">
+            <div class="text-xl">🎰</div><div class="text-[9px] font-bold uppercase mt-1">Игры</div>
         </button>
-        <button onclick="nav('shop')" id="btn-shop" class="flex flex-col items-center gap-1 opacity-40 transition-all duration-300">
-            <span class="text-2xl">🏪</span>
-            <span class="text-[9px] font-black uppercase tracking-tighter">Маркет</span>
+        <button onclick="show('market')" class="nav-btn" id="n-market">
+            <div class="text-xl">🏪</div><div class="text-[9px] font-bold uppercase mt-1">Маркет</div>
         </button>
-        <button onclick="nav('profile')" id="btn-profile" class="flex flex-col items-center gap-1 opacity-40 transition-all duration-300">
-            <span class="text-2xl">👤</span>
-            <span class="text-[9px] font-black uppercase tracking-tighter">Профиль</span>
+        <button onclick="show('profile')" class="nav-btn" id="n-profile">
+            <div class="text-xl">👤</div><div class="text-[9px] font-bold uppercase mt-1">Профиль</div>
         </button>
     </div>
 
     <script>
-        function nav(screenId) {
-            // Переключение экранов
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+        function show(id) {
+            // Скрываем всё
+            const screens = document.getElementsByClassName('screen');
+            for (let s of screens) { s.classList.remove('active'); }
             
-            // Визуальный отклик кнопок меню
-            document.querySelectorAll('.tab-bar button').forEach(b => {
-                b.classList.add('opacity-40');
-                b.style.transform = 'scale(1)';
-            });
-            const activeBtn = document.getElementById('btn-' + screenId);
-            activeBtn.classList.remove('opacity-40');
-            activeBtn.style.transform = 'scale(1.1) translateY(-2px)';
+            // Показываем нужный
+            document.getElementById(id).classList.add('active');
+            
+            // Кнопки меню
+            const btns = document.getElementsByClassName('nav-btn');
+            for (let b of btns) { b.classList.remove('active'); }
+            document.getElementById('n-' + id).classList.add('active');
         }
     </script>
 </body>
