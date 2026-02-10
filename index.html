@@ -5,333 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0b0c10; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
-        .neon-border { border-left: 4px solid #ffca2d; box-shadow: -10px 0 20px rgba(255, 202, 45, 0.1); }
-    </style>
-</head>
-<body class="text-white p-5 pb-24">
-
-    <div class="flex justify-between items-center mb-8">
-        <div class="flex flex-col">
-            <h1 class="text-2xl font-black italic tracking-tighter text-white uppercase">2DUELS</h1>
-            <span class="text-[10px] text-yellow-500 font-bold tracking-[0.3em]">BETA ACCESS</span>
-        </div>
-        <div class="glass-card px-4 py-2 rounded-2xl flex items-center gap-2">
-            <span class="text-yellow-500">⭐</span>
-            <span class="font-bold tracking-tight">1,250</span>
-        </div>
-    </div>
-
-    <div class="glass-card p-5 rounded-[2rem] mb-8 neon-border">
-        <div class="flex items-center gap-4">
-            <div class="w-14 h-14 bg-gradient-to-tr from-yellow-500 to-yellow-200 rounded-2xl flex items-center justify-center text-black font-bold shadow-lg shadow-yellow-500/20">
-                P1
-            </div>
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Твой ранг</p>
-                <h2 class="text-xl font-black italic">GOLD ELITE</h2>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4">
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
         
-        <div onclick="alert('Открываем Мины...')" class="glass-card p-6 rounded-[2.5rem] relative overflow-hidden active:scale-95 transition-transform group">
-            <div class="relative z-10">
-                <h3 class="text-2xl font-black italic leading-none mb-1">MINES</h3>
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">High Multiplier</p>
-            </div>
-            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-20 grayscale group-hover:grayscale-0 transition-all">💣</div>
-        </div>
-
-        <div onclick="alert('Открываем Рулетку...')" class="glass-card p-6 rounded-[2.5rem] relative overflow-hidden active:scale-95 transition-transform group border-l-4 border-red-500/50">
-            <div class="relative z-10">
-                <h3 class="text-2xl font-black italic leading-none mb-1 text-red-500">ROULETTE</h3>
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">PvP Duels</p>
-            </div>
-            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-20 grayscale group-hover:grayscale-0 transition-all">🔫</div>
-        </div>
-
-        <div class="glass-card p-6 rounded-[2.5rem] opacity-50 relative overflow-hidden">
-            <h3 class="text-2xl font-black italic leading-none mb-1">PVP RPS</h3>
-            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest italic">Coming Soon</p>
-            <div class="absolute right-[-10px] bottom-[-10px] text-6xl opacity-10">✊</div>
-        </div>
-
-    </div>
-
-    <nav class="fixed bottom-6 left-6 right-6 glass-card rounded-[2rem] p-3 flex justify-around items-center border border-white/10">
-        <button class="p-3 text-xl opacity-100 text-yellow-500">🏠</button>
-        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">🎒</button>
-        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">🏆</button>
-        <button class="p-3 text-xl opacity-40 hover:opacity-100 transition-opacity">👤</button>
-    </nav>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            background: #000000; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            /* Эффект звездного неба */
-            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+        /* 3D МОНЕТА */
+        .coin-wrap { perspective: 1000px; width: 160px; height: 160px; margin: 40px auto; }
+        .coin { 
+            width: 100%; height: 100%; position: relative; 
+            transform-style: preserve-3d; 
+            transition: transform 3s cubic-bezier(0.1, 1, 0.2, 1); 
         }
-        
-        .stars {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://www.transparenttextures.com/patterns/stardust.png');
-            opacity: 0.3;
-            pointer-events: none;
+        .side { 
+            position: absolute; width: 100%; height: 100%; 
+            border-radius: 50%; backface-visibility: hidden; 
+            display: flex; items-center; justify-center; font-size: 60px; 
+            border: 6px solid #ffd700;
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
         }
+        .heads { transform: rotateY(0deg); }
+        .tails { transform: rotateY(180deg); }
 
-        .main-card {
-            background: #1c1c1e;
-            border-radius: 24px;
-            padding: 20px;
-            transition: all 0.2s ease;
+        /* АНИМАЦИЯ ПОДБРОСА */
+        @keyframes toss {
+            0% { transform: translateY(0) rotateY(0); }
+            50% { transform: translateY(-150px) rotateY(1800deg); }
+            100% { transform: translateY(0) rotateY(3600deg); }
         }
+        .tossing { animation: toss 1.2s ease-in-out; }
 
-        .main-card:active {
-            transform: scale(0.98);
-            background: #2c2c2e;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #8e8e93;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .nav-item.active {
-            color: white;
-        }
-
-        .online-dot {
-            width: 6px;
-            height: 6px;
-            background: #34c759;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 4px;
-        }
+        .btn-choice { padding: 16px; border-radius: 20px; font-weight: 900; text-transform: uppercase; font-size: 12px; transition: 0.3s; }
+        .selected { border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.1); }
     </style>
 </head>
 <body>
-    <div class="stars"></div>
 
-    <div class="p-4">
-        <div class="flex justify-center items-center py-4">
-            <div class="flex items-center text-[13px] font-semibold text-gray-400">
-                <span class="online-dot"></span> 244 онлайн
-            </div>
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-10">
+            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">duel mode</div>
+            <div class="text-xl font-black italic text-yellow-500">1,000 ⭐</div>
         </div>
 
-        <div class="space-y-3 mt-4">
-            
-            <div class="main-card flex justify-between items-center relative overflow-hidden">
-                <div>
-                    <div class="text-[11px] text-gray-500 font-bold mb-1">
-                        <span class="online-dot"></span> 13 онлайн
-                    </div>
-                    <h2 class="text-xl font-bold mb-1 tracking-tight">Lucky</h2>
-                    <p class="text-xs text-gray-400">Приумножай свои гифты</p>
-                </div>
-                <div class="flex gap-1 relative">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-bold border-4 border-black shadow-lg">×2</div>
-                    <div class="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center text-[12px] font-bold border-4 border-black shadow-xl -ml-4">×10</div>
+        <div class="text-center">
+            <h2 class="text-2xl font-black uppercase italic mb-2">Орел и решка</h2>
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-10">регламент: победитель забирает всё</p>
+
+            <div class="coin-wrap">
+                <div id="coin" class="coin">
+                    <div class="side heads">🦅</div>
+                    <div class="side tails">🪙</div>
                 </div>
             </div>
 
-            <div class="main-card flex justify-between items-center">
-                <div>
-                    <div class="text-[11px] text-gray-500 font-bold mb-1">
-                        <span class="online-dot"></span> 6 онлайн
-                    </div>
-                    <h2 class="text-xl font-bold mb-1 tracking-tight">Моно</h2>
-                    <p class="text-xs text-gray-400">Выбери гифт и попробуй выиграть</p>
-                </div>
-                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2904/2904128.png" class="w-10 h-10 opacity-80" alt="gift">
-                </div>
+            <div id="status" class="text-sm font-bold text-gray-400 uppercase mb-10 h-6">выбери свою сторону</div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="selectSide('heads')" id="btn-heads" class="glass btn-choice">Орел</button>
+                <button onclick="selectSide('tails')" id="btn-tails" class="glass btn-choice">Решка</button>
             </div>
 
-            <div class="main-card flex justify-between items-center">
-                <div>
-                    <div class="text-[11px] text-gray-500 font-bold mb-1">
-                        <span class="online-dot"></span> 10 онлайн
-                    </div>
-                    <h2 class="text-xl font-bold mb-1 tracking-tight">Ролл</h2>
-                    <p class="text-xs text-gray-400">Крути чтобы получить подарок</p>
-                </div>
-                <div class="w-14 h-14 bg-green-900/30 rounded-2xl flex items-center justify-center border border-green-500/20">
-                    <span class="text-2xl">🎲</span>
-                </div>
-            </div>
-
+            <button onclick="flipCoin()" id="play-btn" disabled class="w-full py-5 rounded-3xl bg-gray-800 text-gray-500 font-black uppercase tracking-[0.2em] transition-all">
+                Подбросить
+            </button>
         </div>
     </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-[#000000]/80 backdrop-blur-md border-t border-white/5 flex justify-around py-3 px-2">
-        <div class="nav-item">
-            <span class="text-xl mb-1">⚔️</span>
-            <span>ПвП</span>
-        </div>
-        <div class="nav-item active">
-            <span class="text-xl mb-1">⚙️</span>
-            <span>Соло</span>
-        </div>
-        <div class="nav-item">
-            <span class="text-xl mb-1">🎁</span>
-            <span>Розыгрыши</span>
-        </div>
-        <div class="nav-item">
-            <span class="text-xl mb-1">🏪</span>
-            <span>Магазин</span>
-        </div>
-        <div class="nav-item">
-            <span class="text-xl mb-1">👤</span>
-            <span>Профиль</span>
-        </div>
-    </nav>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; }
-        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; pointer-events: none; }
-        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
-        .nav-active { color: white !important; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
-    <div class="stars"></div>
-
-    <div id="screen-solo" class="p-4 animate-in fade-in duration-300">
-        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
-            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> 244 онлайн
-        </div>
-        
-        <div class="space-y-3 mt-4">
-            <div class="glass-card p-5 flex justify-between items-center active:scale-95 transition-all">
-                <div>
-                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 13 онлайн</p>
-                    <h2 class="text-xl font-bold mb-0.5">Lucky</h2>
-                    <p class="text-[12px] text-gray-400 font-medium">Приумножай свои гифты</p>
-                </div>
-                <div class="flex -space-x-4">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[10px] font-black italic shadow-lg">×2</div>
-                    <div class="w-12 h-12 bg-pink-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[12px] font-black italic shadow-xl z-10">×10</div>
-                </div>
-            </div>
-
-            <div class="glass-card p-5 flex justify-between items-center active:scale-95 transition-all">
-                <div>
-                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 6 онлайн</p>
-                    <h2 class="text-xl font-bold mb-0.5">Моно</h2>
-                    <p class="text-[12px] text-gray-400 font-medium">Выбери гифт и выиграй его</p>
-                </div>
-                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center"><span class="text-3xl">🍇</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-profile" class="p-4 hidden animate-in fade-in duration-300">
-        <div class="flex flex-col items-center mt-6 mb-8">
-            <div class="relative">
-                <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=xdogum" alt="avatar">
-                </div>
-                <div class="absolute -left-8 top-4 bg-[#1c1c1e] px-2 py-1 rounded-lg text-[10px] font-bold border border-white/5">🌸 2</div>
-                <div class="absolute -right-8 top-4 bg-[#1c1c1e] p-2 rounded-lg border border-white/5">⚙️</div>
-            </div>
-            <h2 class="text-xl font-bold mt-4 tracking-tight">@xdogum</h2>
-        </div>
-
-        <div class="glass-card p-5 mb-4">
-            <p class="text-[11px] text-gray-500 font-bold mb-3 uppercase tracking-widest">Rolls баланс</p>
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-[10px]">💎</div>
-                    <span class="text-xl font-bold tracking-tight">0 TON</span>
-                </div>
-                <div class="flex gap-2">
-                    <button class="bg-[#007aff] px-5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all">Пополнить</button>
-                    <button class="bg-[#2c2c2e] p-2.5 rounded-xl active:scale-95">📋</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card overflow-hidden">
-            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
-                <div class="flex items-center gap-3"><span class="text-xl">🎁</span> <span class="text-[14px] font-semibold">Инвентарь подарков</span></div>
-                <div class="flex items-center gap-2"><span class="bg-pink-600 px-2 py-0.5 rounded-full text-[10px] font-black">0</span> ❯</div>
-            </div>
-            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
-                <div class="flex items-center gap-3"><span class="text-xl">📜</span> <span class="text-[14px] font-semibold">Задания</span></div>
-                <div class="flex items-center gap-2"><span class="bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full text-[10px] font-bold border border-orange-500/30">0/22</span> ❯</div>
-            </div>
-            <div class="p-4 flex justify-between items-center border-b border-white/5 active:bg-white/5">
-                <div class="flex items-center gap-3"><span class="text-xl">💎</span> <span class="text-[14px] font-semibold">Рефералы</span></div>
-                <span class="text-gray-600 font-bold tracking-tighter">❯</span>
-            </div>
-        </div>
-    </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-4 z-50">
-        <button onclick="showScreen('solo')" id="nav-solo" class="nav-item nav-active flex flex-col items-center gap-1 text-gray-500">
-            <span class="text-xl">⚔️</span><span class="text-[10px] font-bold">ПвП</span>
-        </button>
-        <button onclick="showScreen('solo')" id="nav-solo" class="nav-item nav-active flex flex-col items-center gap-1 text-white">
-            <span class="text-xl">⚙️</span><span class="text-[10px] font-bold">Соло</span>
-        </button>
-        <button class="nav-item flex flex-col items-center gap-1 text-gray-500">
-            <span class="text-xl">🎁</span><span class="text-[10px] font-bold">Розыгрыши</span>
-        </button>
-        <button onclick="showScreen('profile')" id="nav-profile" class="nav-item flex flex-col items-center gap-1 text-gray-500">
-            <span class="text-xl">👤</span><span class="text-[10px] font-bold">Профиль</span>
-        </button>
-    </nav>
 
     <script>
-        function showScreen(screenId) {
-            // Прячем все экраны
-            document.getElementById('screen-solo').classList.add('hidden');
-            document.getElementById('screen-profile').classList.add('hidden');
+        let chosenSide = null;
+        const coin = document.getElementById('coin');
+        const status = document.getElementById('status');
+        const playBtn = document.getElementById('play-btn');
+
+        function selectSide(side) {
+            chosenSide = side;
+            document.querySelectorAll('.btn-choice').forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-' + side).classList.add('selected');
             
-            // Показываем нужный
-            document.getElementById('screen-' + screenId).classList.remove('hidden');
+            playBtn.disabled = false;
+            playBtn.classList.replace('bg-gray-800', 'bg-yellow-500');
+            playBtn.classList.replace('text-gray-500', 'text-black');
+            status.innerText = "сторона выбрана";
+        }
+
+        function flipCoin() {
+            const result = Math.random() > 0.5 ? 'heads' : 'tails';
+            const extraSpins = 1800; // 5 полных кругов
+            const finalRotation = result === 'heads' ? extraSpins : extraSpins + 180;
             
-            // Обновляем иконки в навигации
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => item.classList.remove('text-white'));
-            navItems.forEach(item => item.classList.add('text-gray-500'));
+            playBtn.disabled = true;
+            status.innerText = "монета в воздухе...";
             
-            document.getElementById('nav-' + screenId).classList.add('text-white');
-            document.getElementById('nav-' + screenId).classList.remove('text-gray-500');
+            coin.style.transform = `rotateY(${finalRotation}deg)`;
+
+            setTimeout(() => {
+                if (result === chosenSide) {
+                    status.innerText = "победа! фонд твой 🏆";
+                    status.style.color = "#34c759";
+                } else {
+                    status.innerText = "проигрыш... повезет в другой раз";
+                    status.style.color = "#ff3b30";
+                }
+                
+                // ресет через 3 сек
+                setTimeout(() => {
+                    coin.style.transition = 'none';
+                    coin.style.transform = 'rotateY(0deg)';
+                    status.style.color = "#9ca3af";
+                    status.innerText = "выбери свою сторону";
+                    playBtn.disabled = false;
+                    setTimeout(() => coin.style.transition = 'transform 3s cubic-bezier(0.1, 1, 0.2, 1)', 50);
+                }, 3000);
+            }, 3200);
         }
     </script>
 </body>
@@ -342,636 +126,692 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; transition: background 0.5s; }
-        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; pointer-events: none; }
-        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
-        .hidden { display: none; }
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 30px; }
         
-        /* Анимация вращения для Lucky */
-        @keyframes spinWheel {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(1440deg); }
+        /* БАРАБАН */
+        .cylinder { 
+            width: 220px; height: 220px; 
+            border: 8px solid #222; border-radius: 50%; 
+            position: relative; margin: 40px auto;
+            transition: transform 1.2s cubic-bezier(0.15, 0, 0.15, 1);
         }
-        .spinning { animation: spinWheel 3s cubic-bezier(0.15, 0, 0.15, 1) forwards; }
+        .chamber { 
+            position: absolute; width: 45px; height: 45px; 
+            background: #111; border: 2px solid #333; 
+            border-radius: 50%; transform: translate(-50%, -50%);
+        }
+        .chamber.active { background: #333; border-color: #555; }
+        .chamber.spent { background: #000; border-color: #1a1a1a; opacity: 0.3; }
+
+        /* ЭФФЕКТЫ */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .miss { animation: shake 0.2s ease-in-out 2; }
+        .bang { background: #ff3b30 !important; box-shadow: 0 0 50px #ff3b30; }
     </style>
 </head>
 <body>
-    <div class="stars"></div>
 
-    <div id="screen-solo" class="p-4">
-        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
-            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> 244 онлайн
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <button class="text-gray-600 font-bold text-xs tracking-tighter uppercase">← назад</button>
+            <div class="text-xs font-black italic text-red-600 uppercase tracking-widest">high stakes</div>
         </div>
-        
-        <div class="space-y-3 mt-4">
-            <div onclick="openGame('lucky')" class="glass-card p-5 flex justify-between items-center active:scale-95 cursor-pointer">
-                <div>
-                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> 13 онлайн</p>
-                    <h2 class="text-xl font-bold mb-0.5 text-white">Lucky</h2>
-                    <p class="text-[12px] text-gray-400 font-medium">Приумножай свои гифты</p>
+
+        <div class="text-center">
+            <h2 class="text-2xl font-black uppercase italic mb-1">Русская рулетка</h2>
+            <p id="info-text" class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">зарядов: 1 | слотов: 6</p>
+
+            <div id="cyl" class="cylinder">
                 </div>
-                <div class="flex -space-x-4">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[10px] font-black italic shadow-lg">×2</div>
-                    <div class="w-12 h-12 bg-pink-600 rounded-full border-4 border-[#000] flex items-center justify-center text-[12px] font-black italic shadow-xl z-10">×10</div>
-                </div>
-            </div>
-            <div class="glass-card p-5 flex justify-between items-center opacity-50">
-                <div><h2 class="text-xl font-bold">Моно</h2><p class="text-xs text-gray-400 font-medium">Coming soon...</p></div>
-                <div class="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center">🍇</div>
+
+            <div id="status" class="text-sm font-black italic uppercase mb-10 h-6 text-white">Твой черед...</div>
+
+            <div class="glass p-8 mb-6">
+                <p class="text-[10px] text-gray-500 uppercase mb-6 font-bold">фонд игры: 500 ⭐</p>
+                <button onclick="pullTrigger()" id="trigger-btn" class="w-full py-5 rounded-2xl bg-red-600 text-white font-black uppercase tracking-[0.2em] shadow-lg shadow-red-600/20 active:scale-95 transition-all">
+                    Нажать на курок
+                </button>
             </div>
         </div>
     </div>
-
-    <div id="screen-game-lucky" class="p-4 hidden flex flex-col items-center">
-        <div class="w-full flex justify-between items-center py-4">
-            <button onclick="showScreen('solo')" class="text-gray-400 text-sm font-bold">✕ Закрыть</button>
-            <div class="text-[13px] font-medium text-green-500">● 13 онлайн</div>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="relative mt-10 mb-10">
-            <div id="pointer" class="absolute -top-4 left-1/2 -translate-x-1/2 z-20 text-3xl">▼</div>
-            <div id="wheel" class="w-64 h-64 rounded-full border-8 border-[#1c1c1e] bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-600 shadow-[0_0_50px_rgba(147,51,234,0.3)] relative overflow-hidden transition-all">
-                <div class="absolute inset-0 flex items-center justify-center font-black italic text-4xl opacity-20">LUCKY</div>
-                <div class="absolute top-0 left-1/2 w-1 h-full bg-black/20 -translate-x-1/2"></div>
-                <div class="absolute left-0 top-1/2 w-full h-1 bg-black/20 -translate-y-1/2"></div>
-            </div>
-        </div>
-
-        <h2 id="lucky-status" class="text-2xl font-black italic mb-8 uppercase tracking-tighter">Сделай ставку</h2>
-
-        <div class="w-full glass-card p-6 mt-auto">
-            <div class="flex justify-between items-center mb-6">
-                <span class="text-gray-500 font-bold text-xs uppercase tracking-widest">Ставка:</span>
-                <span id="bet-amount" class="text-xl font-black italic text-blue-500">100 ⭐</span>
-            </div>
-            <button onclick="playLucky()" id="lucky-btn" class="w-full bg-[#007aff] py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-                Крутить
-            </button>
-        </div>
-    </div>
-
-    <div id="screen-profile" class="p-4 hidden">
-        <h2 class="text-center mt-20 text-gray-500 font-bold">Профиль в разработке...</h2>
-    </div>
-
-    <nav id="navbar" class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-4 z-50">
-        <button onclick="showScreen('solo')" class="nav-btn flex flex-col items-center gap-1 text-white">
-            <span class="text-xl">⚙️</span><span class="text-[10px] font-bold">Соло</span>
-        </button>
-        <button onclick="showScreen('profile')" class="nav-btn flex flex-col items-center gap-1 text-gray-500">
-            <span class="text-xl">👤</span><span class="text-[10px] font-bold">Профиль</span>
-        </button>
-    </nav>
 
     <script>
+        const cyl = document.getElementById('cyl');
+        const status = document.getElementById('status');
+        const btn = document.getElementById('trigger-btn');
+        let slots = [0, 0, 0, 0, 0, 1]; // 1 - патрон
+        let currentRotation = 0;
+
+        // Рендерим слоты
+        function renderChambers() {
+            cyl.innerHTML = '';
+            for(let i = 0; i < 6; i++) {
+                const angle = (i * 60) * (Math.PI / 180);
+                const x = 110 + 70 * Math.cos(angle);
+                const y = 110 + 70 * Math.sin(angle);
+                const ch = document.createElement('div');
+                ch.className = 'chamber active';
+                ch.style.left = x + 'px';
+                ch.style.top = y + 'px';
+                cyl.appendChild(ch);
+            }
+        }
+        renderChambers();
+
+        function pullTrigger() {
+            btn.disabled = true;
+            currentRotation += 720 + (Math.random() * 360);
+            cyl.style.transform = `rotate(${currentRotation}deg)`;
+            
+            status.innerText = "взвод курка...";
+            status.style.color = "#555";
+
+            setTimeout(() => {
+                const shot = slots.pop(); // имитация хода
+                
+                if (shot === 1) {
+                    // ПРОИГРЫШ
+                    status.innerText = "БАБАХ! ВЫЛЕТ";
+                    status.style.color = "#ff3b30";
+                    document.body.classList.add('bang');
+                    setTimeout(() => document.body.classList.remove('bang'), 200);
+                    
+                    // Ресет через 2 сек
+                    setTimeout(resetGame, 2000);
+                } else {
+                    // ОСЕЧКА
+                    status.innerText = "ЩЕЛЧОК... ПОВЕЗЛО";
+                    status.style.color = "#34c759";
+                    cyl.classList.add('miss');
+                    setTimeout(() => cyl.classList.remove('miss'), 300);
+                    
+                    document.getElementById('info-text').innerText = `зарядов: 1 | слотов: ${slots.length}`;
+                    btn.disabled = false;
+                }
+            }, 1300);
+        }
+
+        function resetGame() {
+            slots = [0, 0, 0, 0, 0, 1];
+            renderChambers();
+            status.innerText = "Твой черед...";
+            status.style.color = "#fff";
+            document.getElementById('info-text').innerText = `зарядов: 1 | слотов: 6`;
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
+        
+        /* АНИМАЦИЯ БИТВЫ */
+        .battle-area { position: relative; height: 180px; width: 100%; overflow: hidden; margin: 20px 0; }
+        .fighter { 
+            position: absolute; font-size: 70px; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 20px rgba(0, 122, 255, 0.3));
+        }
+        #p1-fighter { left: -100px; transform: scaleX(-1); } /* игрок слева */
+        #p2-fighter { right: -100px; } /* бот/враг справа */
+
+        .clash-left { left: 20% !important; }
+        .clash-right { right: 20% !important; }
+
+        /* КАРТОЧКИ ВЫБОРА */
+        .choice-card { 
+            transition: 0.3s; cursor: pointer; border: 2px solid transparent;
+            display: flex; flex-col items-center; justify-center; padding: 20px;
+        }
+        .choice-card:active { transform: scale(0.9); }
+        .selected-blue { border-color: #007aff; background: rgba(0, 122, 255, 0.1); box-shadow: 0 0 20px rgba(0, 122, 255, 0.2); }
+        
+        .draw-text { animation: pulse 0.5s infinite; color: #9ca3af; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+            <button class="text-gray-600 font-bold text-[10px] uppercase">← назад</button>
+            <div class="text-xs font-black italic text-blue-500 uppercase tracking-widest">tactical rps</div>
+        </div>
+
+        <div class="text-center">
+            <h2 class="text-2xl font-black uppercase italic mb-1">КНБ</h2>
+            <p id="status" class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">сделай свой выбор</p>
+
+            <div class="battle-area glass">
+                <div id="p1-fighter" class="fighter">👊</div>
+                <div id="p2-fighter" class="fighter">👊</div>
+            </div>
+
+            <div id="result-text" class="text-xl font-black italic uppercase h-8 mb-6"></div>
+
+            <div class="grid grid-cols-3 gap-3 mb-8">
+                <div onclick="play('rock')" id="rock" class="glass choice-card">
+                    <span class="text-3xl mb-1">✊</span>
+                    <span class="text-[9px] font-bold text-gray-500 uppercase">камень</span>
+                </div>
+                <div onclick="play('paper')" id="paper" class="glass choice-card">
+                    <span class="text-3xl mb-1">✋</span>
+                    <span class="text-[9px] font-bold text-gray-500 uppercase">бумага</span>
+                </div>
+                <div onclick="play('scissors')" id="scissors" class="glass choice-card">
+                    <span class="text-3xl mb-1">✌️</span>
+                    <span class="text-[9px] font-bold text-gray-500 uppercase">ножницы</span>
+                </div>
+            </div>
+
+            <div class="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">
+                согласно регламенту: при ничьей — переигровка
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const icons = { rock: '✊', paper: '✋', scissors: '✌️' };
         let isPlaying = false;
 
-        function showScreen(screenId) {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-' + screenId).classList.remove('hidden');
-            document.getElementById('navbar').classList.remove('hidden');
-        }
-
-        function openGame(gameId) {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-game-' + gameId).classList.remove('hidden');
-            document.getElementById('navbar').classList.add('hidden'); // Прячем навбар в игре
-        }
-
-        function playLucky() {
-            if (isPlaying) return;
+        function play(playerChoice) {
+            if(isPlaying) return;
             isPlaying = true;
 
-            const wheel = document.getElementById('wheel');
-            const btn = document.getElementById('lucky-btn');
-            const status = document.getElementById('lucky-status');
+            // подсветка выбора
+            document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected-blue'));
+            document.getElementById(playerChoice).classList.add('selected-blue');
 
-            wheel.classList.remove('spinning');
-            void wheel.offsetWidth; // Reset animation
-            wheel.classList.add('spinning');
+            const botChoice = ['rock', 'paper', 'scissors'][Math.floor(Math.random()*3)];
             
-            btn.disabled = true;
-            btn.style.opacity = "0.5";
-            status.innerText = "УДАЧИ...";
-            status.style.color = "white";
+            const p1 = document.getElementById('p1-fighter');
+            const p2 = document.getElementById('p2-fighter');
+            const resText = document.getElementById('result-text');
+            const status = document.getElementById('status');
+
+            // сброс позиций
+            p1.classList.remove('clash-left');
+            p2.classList.remove('clash-right');
+            p1.innerText = icons[playerChoice];
+            p2.innerText = icons[botChoice];
 
             setTimeout(() => {
-                const win = Math.random() > 0.5;
-                isPlaying = false;
-                btn.disabled = false;
-                btn.style.opacity = "1";
+                // Анимация столкновения
+                p1.classList.add('clash-left');
+                p2.classList.add('clash-right');
 
-                if (win) {
-                    status.innerText = "ВЫИГРЫШ! +200 ⭐";
-                    status.style.color = "#34c759";
-                    document.body.style.background = "#051a05";
-                } else {
-                    status.innerText = "ПРОИГРЫШ... 💀";
-                    status.style.color = "#ff3b30";
-                    document.body.style.background = "#1a0505";
-                }
-                setTimeout(() => { document.body.style.background = "#000"; }, 500);
-            }, 3000);
-        }
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 80px; }
-        .glass-card { background: #1c1c1e; border-radius: 20px; transition: all 0.2s ease; }
-        .hidden { display: none; }
-        @keyframes spinWheel { from { transform: rotate(0deg); } to { transform: rotate(1440deg); } }
-        .spinning { animation: spinWheel 3s cubic-bezier(0.15, 0, 0.15, 1) forwards; }
-    </style>
-</head>
-<body>
-    <div id="screen-solo" class="p-4">
-        <div class="flex justify-center items-center py-4 text-[13px] font-medium text-gray-500">
-            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span> <span id="online-count">...</span> онлайн
-        </div>
-        
-        <div class="space-y-3 mt-4">
-            <div onclick="openGame('lucky')" class="glass-card p-5 flex justify-between items-center active:scale-95 cursor-pointer">
-                <div>
-                    <p class="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest"><span class="text-green-500">●</span> <span id="game-lucky-online">0</span> онлайн</p>
-                    <h2 class="text-xl font-bold mb-0.5">Lucky</h2>
-                    <p class="text-[12px] text-gray-400 font-medium">PvP Сражение за TON</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-black italic border-4 border-black">×2</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-game-lucky" class="p-4 hidden flex flex-col items-center">
-        <div class="w-full flex justify-between items-center py-4">
-            <button onclick="showScreen('solo')" class="text-gray-400 text-sm font-bold">✕ Выйти</button>
-            <div id="pvp-status" class="text-[11px] font-bold text-blue-500 uppercase tracking-widest animate-pulse">Поиск игрока...</div>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="relative mt-10 mb-10">
-            <div id="wheel" class="w-64 h-64 rounded-full border-8 border-[#1c1c1e] bg-gradient-to-tr from-blue-600 to-purple-600 shadow-2xl relative">
-                <div class="absolute inset-0 flex items-center justify-center font-black italic opacity-20">PvP</div>
-            </div>
-        </div>
-
-        <div id="player-vs" class="flex gap-10 items-center mb-8">
-            <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full mb-2 border border-blue-500"></div><p class="text-[10px] font-bold text-blue-400">ВЫ</p></div>
-            <div class="text-xl font-black italic text-gray-700">VS</div>
-            <div class="text-center"><div class="w-12 h-12 bg-gray-800 rounded-full mb-2 border border-dashed border-gray-600"></div><p class="text-[10px] font-bold text-gray-600">?</p></div>
-        </div>
-
-        <button id="lucky-btn" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-[1.5rem] font-black uppercase tracking-widest transition-all">
-            Ждем противника
-        </button>
-    </div>
-
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
-        .glass { background: #1c1c1e; border-radius: 20px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none; }
-        .mine-cell { aspect-ratio: 1/1; display: flex; items-center; justify-center; font-size: 24px; cursor: pointer; }
-        .mine-cell.active { background: #2c2c2e; transform: scale(0.95); }
-        .mine-cell.win { background: rgba(52, 199, 89, 0.2); border-color: #34c759; box-shadow: 0 0 15px rgba(52, 199, 89, 0.2); }
-        .mine-cell.lose { background: rgba(255, 59, 48, 0.2); border-color: #ff3b30; box-shadow: 0 0 15px rgba(255, 59, 48, 0.2); }
-    </style>
-</head>
-<body>
-
-    <div id="screen-solo" class="p-4">
-        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
-            <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-1"></span> <span id="online-total">...</span> онлайн
-        </div>
-        
-        <div class="space-y-3 mt-4">
-            <div onclick="openMines()" class="glass p-5 flex justify-between items-center active:scale-95 transition-all">
-                <div>
-                    <h2 class="text-xl font-bold italic tracking-tight uppercase leading-none mb-1">Mines 3x3</h2>
-                    <p class="text-[11px] text-gray-400 font-medium">Найди подарок, избегай мин</p>
-                </div>
-                <div class="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">💣</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-mines" class="p-4 hidden animate-in fade-in duration-300">
-        <div class="flex justify-between items-center py-4">
-            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Назад</button>
-            <div class="text-orange-500 font-black italic">MINES 3X3</div>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3 mt-10 w-full max-w-[320px] mx-auto" id="mines-grid">
-            </div>
-
-        <div class="mt-10 w-full max-w-[320px] mx-auto space-y-4">
-            <div class="glass p-4 flex justify-between items-center">
-                <span class="text-gray-500 text-xs font-bold uppercase">Множитель:</span>
-                <span id="multiplier" class="text-xl font-black italic text-orange-500">x1.00</span>
-            </div>
-            
-            <button id="cashout-btn" onclick="cashout()" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest transition-all">
-                Забрать выигрыш
-            </button>
-            
-            <button id="start-mines-btn" onclick="startGame()" class="w-full bg-orange-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-orange-600/20">
-                Новая игра (100 ⭐)
-            </button>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            projectId: "duels-1fb6b",
-            storageBucket: "duels-1fb6b.firebasestorage.app",
-            messagingSenderId: "745698956226",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const myId = "user_" + Math.floor(Math.random() * 9999);
-        set(ref(db, 'online/' + myId), true);
-        onDisconnect(ref(db, 'online/' + myId)).remove();
-        onValue(ref(db, 'online'), (s) => {
-            document.getElementById('online-total').innerText = (s.exists() ? Object.keys(s.val()).length : 0) + 120;
-        });
-        let mines = [];
-        let revealed = [];
-        let isGameOver = true;
-        let currentMult = 1.0;
-
-        window.openMines = () => {
-            document.getElementById('screen-solo').classList.add('hidden');
-            document.getElementById('screen-mines').classList.remove('hidden');
-            initGrid();
-        };
-
-        window.showScreen = (id) => {
-            document.getElementById('screen-mines').classList.add('hidden');
-            document.getElementById('screen-solo').classList.remove('hidden');
-        };
-
-        function initGrid() {
-            const grid = document.getElementById('mines-grid');
-            grid.innerHTML = '';
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'glass mine-cell';
-                cell.onclick = () => clickCell(i, cell);
-                grid.appendChild(cell);
-            }
-        }
-
-        window.startGame = () => {
-            isGameOver = false;
-            revealed = [];
-            currentMult = 1.0;
-            updateUI();
-            
-            // Генерируем 2 мины на поле 3х3
-            mines = [];
-            while(mines.length < 2) {
-                let r = Math.floor(Math.random() * 9);
-                if(!mines.includes(r)) mines.push(r);
-            }
-            
-            initGrid();
-            document.getElementById('start-mines-btn').classList.add('hidden');
-            document.getElementById('cashout-btn').disabled = false;
-            document.getElementById('cashout-btn').className = "w-full bg-green-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95";
-        };
-
-        function clickCell(index, element) {
-            if (isGameOver || revealed.includes(index)) return;
-            
-            revealed.push(index);
-            if (mines.includes(index)) {
-                // ВЗРЫВ
-                element.classList.add('lose');
-                element.innerText = '💣';
-                gameOver(false);
-            } else {
-                // ПОПАЛ
-                element.classList.add('win');
-                element.innerText = '💎';
-                currentMult += 0.5;
-                updateUI();
-                if (revealed.length === 7) gameOver(true); // Все открыты кроме мин
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('multiplier').innerText = `x${currentMult.toFixed(2)}`;
-        }
-
-        function gameOver(win) {
-            isGameOver = true;
-            document.getElementById('start-mines-btn').classList.remove('hidden');
-            document.getElementById('cashout-btn').disabled = true;
-            document.getElementById('cashout-btn').className = "w-full bg-gray-800 text-gray-500 py-5 rounded-2xl font-black uppercase tracking-widest";
-            if (!win) alert("БУМ! Ты проиграл.");
-        }
-
-        window.cashout = () => {
-            if (isGameOver) return;
-            alert(`Забрал выигрыш с коэффициентом ${currentMult.toFixed(2)}!`);
-            gameOver(true);
-        };
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
-        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none; }
-        .rps-btn { aspect-ratio: 1/1; display: flex; flex-direction: column; items-center; justify-center; border-radius: 20px; transition: 0.2s; border: 2px solid transparent; }
-        .rps-btn:active { transform: scale(0.9); }
-        .rps-btn.selected { border-color: #007aff; background: rgba(0, 122, 255, 0.1); }
-        @keyframes vs-glow { 0% { text-shadow: 0 0 5px #fff; } 50% { text-shadow: 0 0 20px #007aff; } 100% { text-shadow: 0 0 5px #fff; } }
-        .vs-text { animation: vs-glow 2s infinite; font-style: italic; font-weight: 900; }
-    </style>
-</head>
-<body>
-
-    <div id="screen-solo" class="p-4">
-        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
-            <span id="online-total">...</span> ОНЛАЙН
-        </div>
-        
-        <div class="space-y-3 mt-4">
-            <div onclick="openMines()" class="glass p-5 flex justify-between items-center active:scale-95">
-                <div><h2 class="text-xl font-bold italic uppercase leading-none mb-1">Mines 3x3</h2><p class="text-[11px] text-gray-400">Соло режим</p></div>
-                <div class="text-2xl">💣</div>
-            </div>
-
-            <div onclick="openRPS()" class="glass p-5 flex justify-between items-center active:scale-95 border-l-4 border-blue-500">
-                <div>
-                    <h2 class="text-xl font-bold italic uppercase leading-none mb-1">PvP Дуэль</h2>
-                    <p class="text-[11px] text-gray-400">Камень, Ножницы, Бумага</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-600/20">✊</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-rps" class="p-4 hidden">
-        <div class="flex justify-between items-center py-4 mb-10">
-            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Выйти</button>
-            <div class="text-blue-500 font-black italic tracking-tighter uppercase">Arena 1v1</div>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="flex justify-around items-center mb-16 relative">
-            <div class="text-center">
-                <div class="w-20 h-20 bg-blue-600 rounded-full border-4 border-black shadow-xl mb-2 flex items-center justify-center text-3xl">👤</div>
-                <p class="text-xs font-bold uppercase">Вы</p>
-            </div>
-            <div class="text-4xl vs-text text-white">VS</div>
-            <div class="text-center">
-                <div class="w-20 h-20 bg-gray-800 rounded-full border-4 border-black shadow-xl mb-2 flex items-center justify-center text-3xl opacity-50">?</div>
-                <p class="text-xs font-bold uppercase text-gray-600">Оппонент</p>
-            </div>
-        </div>
-
-        <h3 id="rps-status" class="text-center text-gray-400 font-bold uppercase text-xs mb-6 tracking-widest">Сделай свой выбор:</h3>
-
-        <div class="grid grid-cols-3 gap-4 mb-10">
-            <div onclick="selectRPS('rock')" id="btn-rock" class="glass rps-btn bg-[#1c1c1e]">
-                <span class="text-3xl mb-2">✊</span>
-                <span class="text-[10px] font-bold uppercase text-gray-500">Камень</span>
-            </div>
-            <div onclick="selectRPS('paper')" id="btn-paper" class="glass rps-btn bg-[#1c1c1e]">
-                <span class="text-3xl mb-2">✋</span>
-                <span class="text-[10px] font-bold uppercase text-gray-500">Бумага</span>
-            </div>
-            <div onclick="selectRPS('scissors')" id="btn-scissors" class="glass rps-btn bg-[#1c1c1e]">
-                <span class="text-3xl mb-2">✌️</span>
-                <span class="text-[10px] font-bold uppercase text-gray-500">Ножницы</span>
-            </div>
-        </div>
-
-        <button id="rps-confirm" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-3xl font-black uppercase tracking-widest transition-all">
-            Подтвердить ход
-        </button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            projectId: "duels-1fb6b",
-            storageBucket: "duels-1fb6b.firebasestorage.app",
-            messagingSenderId: "745698956226",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const myId = "user_" + Math.floor(Math.random() * 9999);
-
-        // Навигация
-        window.openRPS = () => {
-            document.getElementById('screen-solo').classList.add('hidden');
-            document.getElementById('screen-rps').classList.remove('hidden');
-        };
-        window.showScreen = (id) => {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-' + id).classList.remove('hidden');
-        };
-
-        // Логика выбора КНБ
-        let currentChoice = null;
-        window.selectRPS = (choice) => {
-            currentChoice = choice;
-            document.querySelectorAll('.rps-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('btn-' + choice).classList.add('selected');
-            
-            const btn = document.getElementById('rps-confirm');
-            btn.disabled = false;
-            btn.classList.replace('bg-gray-800', 'bg-blue-600');
-            btn.classList.replace('text-gray-500', 'text-white');
-            btn.innerText = "ГОТОВ!";
-        };
-
-        // Онлайн для массовки
-        onValue(ref(db, 'online'), (s) => {
-            document.getElementById('online-total').innerText = (s.exists() ? Object.keys(s.val()).length : 0) + 142;
-        });
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #000; color: white; font-family: sans-serif; margin: 0; padding-bottom: 80px; overflow-x: hidden; }
-        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none; }
-        
-        /* Анимация монетки */
-        .coin-container { width: 150px; height: 150px; perspective: 1000px; margin: 40px auto; }
-        .coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.2, 1, 0.3, 1); }
-        .coin-side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 50px; border: 6px solid #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
-        .side-a { background: linear-gradient(45deg, #ffd700, #b8860b); }
-        .side-b { background: linear-gradient(45deg, #ffd700, #b8860b); transform: rotateY(180deg); }
-        
-        .flipping { animation: spin 0.5s linear infinite; }
-        @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-    </style>
-</head>
-<body>
-
-    <div id="screen-solo" class="p-4">
-        <div class="text-center py-6">
-            <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest"><span class="text-green-500">●</span> <span id="online-count">142</span> онлайн</p>
-        </div>
-        
-        <div class="space-y-3">
-            <div onclick="openCoinFlip()" class="glass p-6 flex justify-between items-center active:scale-95 border-l-4 border-yellow-500 transition-all">
-                <div>
-                    <h2 class="text-xl font-bold italic uppercase tracking-tighter">Coin Flip PvP</h2>
-                    <p class="text-[11px] text-gray-400">50/50: Удвой за секунду</p>
-                </div>
-                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-2xl shadow-lg border-4 border-black">🪙</div>
-            </div>
-            
-            <div class="glass p-6 flex justify-between items-center opacity-50 grayscale">
-                <div><h2 class="text-xl font-bold italic uppercase tracking-tighter">Dice Roll</h2><p class="text-[11px] text-gray-400">Скоро в главе 10</p></div>
-                <div class="text-2xl">🎲</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-coin" class="p-4 hidden">
-        <div class="flex justify-between items-center py-4">
-            <button onclick="showScreen('solo')" class="text-gray-500 font-bold text-sm">✕ Назад</button>
-            <div class="text-yellow-500 font-black italic uppercase">Coin Flip PvP</div>
-            <div class="w-10"></div>
-        </div>
-
-        <div class="coin-container">
-            <div id="coin" class="coin">
-                <div class="coin-side side-a">🦅</div>
-                <div class="coin-side side-b">🪙</div>
-            </div>
-        </div>
-
-        <div id="flip-status" class="text-center mb-8 font-black italic text-xl uppercase">Выбери сторону:</div>
-
-        <div class="flex gap-4 mb-10">
-            <button onclick="chooseSide('heads')" class="flex-1 glass p-6 active:scale-95 border-2 border-transparent hover:border-yellow-500 transition-all">
-                <div class="text-3xl mb-2">🦅</div>
-                <div class="text-[10px] font-bold text-gray-400 uppercase">Орел</div>
-            </button>
-            <button onclick="chooseSide('tails')" class="flex-1 glass p-6 active:scale-95 border-2 border-transparent hover:border-yellow-500 transition-all">
-                <div class="text-3xl mb-2">🪙</div>
-                <div class="text-[10px] font-bold text-gray-400 uppercase">Решка</div>
-            </button>
-        </div>
-
-        <button id="play-coin" disabled class="w-full bg-gray-800 text-gray-500 py-5 rounded-[20px] font-black uppercase tracking-widest transition-all">
-            Ищем соперника...
-        </button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        // КЛЮЧИ НА МЕСТЕ
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            projectId: "duels-1fb6b",
-            storageBucket: "duels-1fb6b.firebasestorage.app",
-            messagingSenderId: "745698956226",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const myId = "u" + Math.floor(Math.random() * 999);
-
-        window.openCoinFlip = () => {
-            document.getElementById('screen-solo').classList.add('hidden');
-            document.getElementById('screen-coin').classList.remove('hidden');
-        };
-
-        window.showScreen = (id) => {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-' + id).classList.remove('hidden');
-        };
-
-        let selectedSide = null;
-        window.chooseSide = (side) => {
-            selectedSide = side;
-            document.getElementById('flip-status').innerText = "Твой выбор: " + (side === 'heads' ? "Орел" : "Решка");
-            const btn = document.getElementById('play-coin');
-            btn.disabled = false;
-            btn.className = "w-full bg-yellow-500 text-black py-5 rounded-[20px] font-black uppercase tracking-widest active:scale-95";
-            btn.innerText = "БРОСИТЬ МОНЕТУ";
-        };
-
-        window.playCoin = () => {
-            const coin = document.getElementById('coin');
-            coin.classList.add('flipping');
-            
-            setTimeout(() => {
-                coin.classList.remove('flipping');
-                const result = Math.random() > 0.5 ? 'heads' : 'tails';
-                const rotation = result === 'heads' ? 0 : 180;
-                coin.style.transform = `rotateY(${1800 + rotation}deg)`;
-                
                 setTimeout(() => {
-                    if (result === selectedSide) {
-                        document.getElementById('flip-status').innerText = "ПОБЕДА! +200 ⭐";
-                        document.getElementById('flip-status').style.color = "#34c759";
+                    const winner = getWinner(playerChoice, botChoice);
+                    
+                    if(winner === 'draw') {
+                        resText.innerText = "НИЧЬЯ!";
+                        resText.className = "text-xl font-black italic uppercase draw-text";
+                        status.innerText = "ПЕРЕИГРОВКА...";
+                        setTimeout(() => {
+                            isPlaying = false;
+                            p1.classList.remove('clash-left');
+                            p2.classList.remove('clash-right');
+                        }, 1000);
+                    } else if(winner === 'player') {
+                        resText.innerText = "ПОБЕДА 🏆";
+                        resText.style.color = "#34c759";
+                        isPlaying = false;
                     } else {
-                        document.getElementById('flip-status').innerText = "ПРОИГРЫШ... 💀";
-                        document.getElementById('flip-status').style.color = "#ff3b30";
+                        resText.innerText = "ПРОИГРЫШ 💀";
+                        resText.style.color = "#ff3b30";
+                        isPlaying = false;
                     }
-                }, 3000);
-            }, 1000);
-        };
+                }, 500);
+            }, 100);
+        }
+
+        function getWinner(p, b) {
+            if(p === b) return 'draw';
+            if((p === 'rock' && b === 'scissors') || 
+               (p === 'paper' && b === 'rock') || 
+               (p === 'scissors' && b === 'paper')) return 'player';
+            return 'bot';
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
         
-        // Кнопка в JS
-        document.getElementById('play-coin').onclick = window.playCoin;
+        /* СЕТКА ЧИПСОВ */
+        .grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 300px; margin: 0 auto; }
+        
+        /* КАРТОЧКА ЧИПСОВ */
+        .chip-card { 
+            aspect-ratio: 1/1; perspective: 1000px; cursor: pointer;
+        }
+        .chip-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .is-flipped { transform: rotateY(180deg); }
+        
+        .chip-front, .chip-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 30px;
+        }
+        .chip-front { background: #1a1a1a; border: 1px solid #333; }
+        .chip-back { transform: rotateY(180deg); }
+        
+        /* Цвета результатов */
+        .bg-win { background: linear-gradient(135deg, #007aff, #003a75); }
+        .bg-lose { background: linear-gradient(135deg, #ff3b30, #801d18); }
+
+        .mine-selected { border: 2px solid #ff9500 !important; background: rgba(255, 149, 0, 0.1) !important; }
+    </style>
+</head>
+<body>
+
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <button class="text-gray-600 font-bold text-[10px] uppercase">← назад</button>
+            <div class="text-xs font-black italic text-orange-500 uppercase tracking-widest">strategic field</div>
+        </div>
+
+        <div class="text-center">
+            <h2 class="text-2xl font-black uppercase italic mb-1">Минное поле</h2>
+            <p id="instruction" class="text-[10px] text-orange-500 font-bold uppercase tracking-widest mb-8">
+                этап 1: пометь 3 чипсины (мины)
+            </p>
+
+            <div id="field" class="grid-3x3 mb-10">
+                </div>
+
+            <div id="game-info" class="glass p-5 mb-6 hidden">
+                <p id="turn-text" class="text-xs font-black uppercase italic text-gray-400">Твой ход: ищи безопасные чипсы</p>
+            </div>
+
+            <button id="main-btn" onclick="confirmMines()" disabled class="w-full py-5 rounded-2xl bg-gray-800 text-gray-500 font-black uppercase tracking-widest transition-all">
+                Подтвердить (0/3)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const field = document.getElementById('field');
+        const btn = document.getElementById('main-btn');
+        const instruction = document.getElementById('instruction');
+        
+        let selectedMines = [];
+        let enemyMines = []; // имитация мин противника
+        let gameState = 'setup'; // setup -> battle
+
+        // Создаем поле
+        function createField() {
+            field.innerHTML = '';
+            for(let i=0; i<9; i++) {
+                field.innerHTML += `
+                    <div class="chip-card" onclick="handleCellClick(${i})">
+                        <div id="inner-${i}" class="chip-inner">
+                            <div id="front-${i}" class="chip-front">🍟</div>
+                            <div id="back-${i}" class="chip-back">💎</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        createField();
+
+        function handleCellClick(i) {
+            if(gameState === 'setup') {
+                toggleMine(i);
+            } else if(gameState === 'battle') {
+                revealCell(i);
+            }
+        }
+
+        function toggleMine(i) {
+            const el = document.getElementById('front-' + i);
+            if(selectedMines.includes(i)) {
+                selectedMines = selectedMines.filter(m => m !== i);
+                el.classList.remove('mine-selected');
+            } else if(selectedMines.length < 3) {
+                selectedMines.push(i);
+                el.classList.add('mine-selected');
+            }
+            
+            updateBtn();
+        }
+
+        function updateBtn() {
+            const count = selectedMines.length;
+            btn.innerText = `Подтвердить (${count}/3)`;
+            if(count === 3) {
+                btn.disabled = false;
+                btn.className = "w-full py-5 rounded-2xl bg-orange-600 text-white font-black uppercase tracking-widest active:scale-95";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full py-5 rounded-2xl bg-gray-800 text-gray-500 font-black uppercase tracking-widest";
+            }
+        }
+
+        function confirmMines() {
+            gameState = 'battle';
+            btn.classList.add('hidden');
+            document.getElementById('game-info').classList.remove('hidden');
+            instruction.innerText = "этап 2: не наступи на мину врага!";
+            instruction.className = "text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-8";
+            
+            // Генерируем мины врага (бота)
+            while(enemyMines.length < 3) {
+                let r = Math.floor(Math.random()*9);
+                if(!enemyMines.includes(r)) enemyMines.push(r);
+            }
+            
+            // Сбрасываем визуальное выделение своих мин для начала игры
+            document.querySelectorAll('.chip-front').forEach(el => el.classList.remove('mine-selected'));
+        }
+
+        function revealCell(i) {
+            const inner = document.getElementById('inner-' + i);
+            const back = document.getElementById('back-' + i);
+            
+            if(inner.classList.contains('is-flipped')) return;
+            
+            inner.classList.add('is-flipped');
+            
+            if(enemyMines.includes(i)) {
+                back.innerText = "💣";
+                back.classList.add('bg-lose');
+                document.getElementById('turn-text').innerText = "БАБАХ! ТЫ ПРОИГРАЛ";
+                document.getElementById('turn-text').style.color = "#ff3b30";
+            } else {
+                back.innerText = "💎";
+                back.classList.add('bg-win');
+                document.getElementById('turn-text').innerText = "ЧИСТО! ПРОДОЛЖАЙ";
+                document.getElementById('turn-text').style.color = "#007aff";
+            }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0b0e11; color: white; font-family: sans-serif; overflow-x: hidden; }
+        .glass-dark { background: #161a1e; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* КОЛЕСО */
+        .wheel-box { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+        #main-wheel {
+            width: 100%; height: 100%; border-radius: 50%;
+            transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1);
+            position: relative; overflow: hidden;
+            border: 8px solid #1c2127;
+        }
+        .pointer {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 25px; background: white; clip-path: polygon(0 0, 100% 0, 50% 100%);
+            z-index: 20; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+        .center-timer {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: #000; border-radius: 50%;
+            z-index: 10; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 900; border: 4px solid #1c2127;
+        }
+
+        /* Кнопки как на скрине */
+        .btn-ton { background: #2d333a; border-radius: 14px; font-weight: 800; transition: 0.2s; }
+        .btn-add { background: #3b444e; border-radius: 14px; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <div class="p-4 flex justify-center items-center">
+        <div class="text-[10px] font-bold text-green-500 uppercase tracking-widest flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> 227 онлайн
+        </div>
+    </div>
+
+    <div class="px-4 flex justify-between gap-2 mb-8">
+        <div class="glass-dark p-3 flex-1 flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-orange-500 flex-shrink-0"></div>
+            <div><p class="text-[9px] text-gray-500">@Magikmoney</p><p class="text-[10px] font-bold">+0 TON</p></div>
+        </div>
+        <div class="glass-dark p-3 flex-1 flex items-center gap-2 border-orange-500/30">
+            <div class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0"></div>
+            <div><p class="text-[9px] text-gray-500">@giftgambler</p><p class="text-[10px] font-bold text-yellow-500">+48603 TON</p></div>
+        </div>
+    </div>
+
+    <div class="text-center mb-6">
+        <div class="inline-block bg-[#1c2127] px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            Всего <span class="text-blue-400">2.67 TON</span>
+        </div>
+    </div>
+
+    <div class="wheel-box mb-10">
+        <div class="pointer"></div>
+        <div class="center-timer">00:00</div>
+        <canvas id="main-wheel" width="280" height="280"></canvas>
+    </div>
+
+    <div class="px-6 flex gap-3 mb-10">
+        <button class="btn-add flex-1 py-4 text-xs uppercase">+ Добавить в PvP</button>
+        <button onclick="spinJackpot()" class="btn-ton flex-1 py-4 text-xs uppercase flex items-center justify-center gap-2">
+            🚀 4.07 TON
+        </button>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-[#0b0e11] border-t border-white/5 flex justify-around py-4">
+        <div class="flex flex-col items-center opacity-100"><span class="text-xl">⚔️</span><span class="text-[9px] mt-1">ПвП</span></div>
+        <div class="flex flex-col items-center opacity-40"><span class="text-xl">🎰</span><span class="text-[9px] mt-1">Соло</span></div>
+        <div class="flex flex-col items-center opacity-40"><span class="text-xl">🎁</span><span class="text-[9px] mt-1">Розыгрыши</span></div>
+        <div class="flex flex-col items-center opacity-40"><span class="text-xl">🏪</span><span class="text-[9px] mt-1">Магазин</span></div>
+        <div class="flex flex-col items-center opacity-40"><span class="text-xl">👤</span><span class="text-[9px] mt-1">Профиль</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('main-wheel');
+        const ctx = canvas.getContext('2d');
+        
+        // Данные игроков (сектора)
+        const players = [
+            { name: 'P1', color: '#d61a81', share: 0.6 },
+           { name: 'P2', color: '#6366f1', share: 0.15 },
+            { name: 'P3', color: '#f97316', share: 0.1 },
+            { name: 'P4', color: '#06b6d4', share: 0.15 }
+        ];
+
+        function drawWheel() {
+            let startAngle = 0;
+            players.forEach(p => {
+                const sliceAngle = 2 * Math.PI * p.share;
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.moveTo(140, 140);
+                ctx.arc(140, 140, 140, startAngle, startAngle + sliceAngle);
+                ctx.fill();
+                startAngle += sliceAngle;
+            });
+        }
+        drawWheel();
+
+        function spinJackpot() {
+            const wheel = document.getElementById('main-wheel');
+            const randomRotation = 1800 + Math.random() * 2000;
+            wheel.style.transform = `rotate(${randomRotation}deg)`;
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: #0b0e11; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1c2127 0%, #0b0e11 100%);
+        }
+        
+        /* КОСМИЧЕСКИЕ ЗВЕЗДЫ НА ФОНЕ */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/123163/stars.png') repeat;
+            z-index: -1; opacity: 0.3;
+        }
+
+        /* КОЛЕСО С АВАТАРКАМИ */
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+        #wheel-canvas { 
+            width: 100%; height: 100%; 
+            border-radius: 50%;
+            transition: transform 6s cubic-bezier(0.1, 0, 0.1, 1);
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+        }
+
+        .center-hub {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90px; height: 90px; background: #000; border: 4px solid #1c2127;
+            border-radius: 50%; z-index: 10; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+
+        .timer-text { font-size: 18px; font-weight: 900; letter-spacing: -1px; }
+        
+        /* КНОПКИ И ПЛАШКИ */
+        .panel { background: #161a1e; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; }
+        .btn-primary { background: #2d333a; border-radius: 16px; font-weight: 800; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.96); }
+        .btn-action { background: #3b444e; border-radius: 16px; font-weight: 800; }
+
+        .tab-icon { opacity: 0.4; transition: 0.3s; }
+        .tab-active { opacity: 1; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <div class="p-4 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-black/30 rounded-full border border-white/5">
+            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">227 онлайн</span>
+        </div>
+    </div>
+
+    <div class="px-4 grid grid-cols-2 gap-3 mb-6">
+        <div class="panel p-3 flex items-center gap-3">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-8 h-8 rounded-full bg-orange-500">
+            <div><p class="text-[9px] text-gray-500">@Magikmoney</p><p class="text-[10px] font-bold">+0 TON</p></div>
+        </div>
+        <div class="panel p-3 flex items-center gap-3 border-orange-500/20">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" class="w-8 h-8 rounded-full bg-blue-500">
+            <div><p class="text-[9px] text-gray-500">@giftgambler</p><p class="text-[10px] font-bold text-yellow-500">+48603 TON</p></div>
+        </div>
+    </div>
+
+    <div class="text-center mb-6">
+        <div class="inline-block bg-[#1c2127] px-6 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest">
+            ВСЕГО <span class="text-blue-400">2.67 TON</span>
+        </div>
+    </div>
+
+    <div class="wheel-container mb-8">
+        <div class="absolute -top-2 left-1/2 -translate-x-1/2 z-20 w-6 h-8 bg-white clip-path-poly" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
+        <div class="center-hub">
+            <span class="timer-text" id="countdown">00:00</span>
+        </div>
+        <canvas id="wheel-canvas" width="600" height="600"></canvas>
+    </div>
+
+    <div class="px-6 grid grid-cols-2 gap-4 mb-20">
+        <button class="btn-action py-5 text-[11px] font-black uppercase">+ Добавить в ПвП</button>
+        <button onclick="spin()" class="btn-primary py-5 text-[11px] font-black uppercase flex items-center justify-center gap-2">
+            🚀 4.07 TON
+        </button>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-[#0b0e11]/90 backdrop-blur-lg border-t border-white/5 flex justify-around py-5 px-2">
+        <div class="tab-icon tab-active flex flex-col items-center"><span class="text-xl">⚔️</span><span class="text-[9px] font-bold mt-1">ПвП</span></div>
+        <div class="tab-icon flex flex-col items-center"><span class="text-xl">🎰</span><span class="text-[9px] font-bold mt-1">Соло</span></div>
+        <div class="tab-icon flex flex-col items-center"><span class="text-xl">🎁</span><span class="text-[9px] font-bold mt-1">Розыгрыши</span></div>
+        <div class="tab-icon flex flex-col items-center"><span class="text-xl">🏪</span><span class="text-[9px] font-bold mt-1">Магазин</span></div>
+        <div class="tab-icon flex flex-col items-center"><span class="text-xl">👤</span><span class="text-[9px] font-bold mt-1">Профиль</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        const players = [
+            { name: 'P1', color: '#d61a81', share: 0.5, img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1' },
+            { name: 'P2', color: '#6366f1', share: 0.1, img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2' },
+            { name: 'P3', color: '#f97316', share: 0.1, img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3' },
+            { name: 'P4', color: '#06b6d4', share: 0.3, img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4' }
+        ];
+
+        function draw() {
+            let startAngle = -Math.PI / 2;
+            players.forEach(p => {
+                const sliceAngle = 2 * Math.PI * p.share;
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.moveTo(300, 300);
+                ctx.arc(300, 300, 300, startAngle, startAngle + sliceAngle);
+                ctx.fill();
+                
+                // Рисуем аватарку в центре сектора
+                const iconAngle = startAngle + sliceAngle / 2;
+                const iconX = 300 + 180 * Math.cos(iconAngle);
+                const iconY = 300 + 180 * Math.sin(iconAngle);
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(iconX, iconY, 25, 0, Math.PI * 2);
+                ctx.clip();
+                const img = new Image();
+                img.src = p.img;
+                ctx.drawImage(img, iconX - 25, iconY - 25, 50, 50);
+                ctx.restore();
+                
+                startAngle += sliceAngle;
+            });
+        }
+
+        window.onload = draw;
+
+        function spin() {
+            const wheel = document.getElementById('wheel-canvas');
+            const deg = 1800 + Math.random() * 3000;
+            wheel.style.transform = `rotate(${deg}deg)`;
+        }
     </script>
 </body>
 </html>
@@ -983,287 +823,141 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 90px; }
-        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none; }
-        .nav-item { opacity: 0.4; transition: 0.3s; cursor: pointer; }
-        .nav-item.active { opacity: 1; color: #007aff; }
-        
-        /* Свечение для надписи */
-        .coming-soon-glow {
-            text-shadow: 0 0 15px rgba(0, 122, 255, 0.6);
-            letter-spacing: 0.15em;
+        body { 
+            background: #0b0e11; 
+            color: #ffffff; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 40%, #1e2329 0%, #0b0e11 100%);
+        }
+
+        /* ЭФФЕКТ СВЕЧЕНИЯ */
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(214, 26, 129, 0.15), 0 0 40px rgba(99, 102, 241, 0.1);
+        }
+
+        /* КАРТОЧКИ ИЗ СКРИНШОТА */
+        .ui-panel {
+            background: rgba(22, 26, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 22px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ui-panel:active { transform: scale(0.98); background: rgba(22, 26, 30, 0.9); }
+
+        /* ЦЕНТРАЛЬНЫЙ ТАЙМЕР (HUB) */
+        .timer-hub {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 88px; height: 88px; background: #000; border: 4px solid #1c2127;
+            border-radius: 50%; z-index: 10; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+        }
+
+        /* КАСТОМНЫЕ КНОПКИ */
+        .btn-ton-main {
+            background: linear-gradient(180deg, #353c45 0%, #2d333a 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ */
+        .nav-bar {
+            background: rgba(11, 14, 17, 0.98);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-link { 
+            transition: all 0.2s; 
+            filter: grayscale(1);
+            opacity: 0.4;
+        }
+        .nav-link.active { 
+            filter: grayscale(0);
+            opacity: 1;
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
 
-    <div id="screen-solo" class="p-4">
-        <div class="text-center py-4 text-gray-500 text-[11px] font-bold uppercase tracking-widest">
-            <span class="text-green-500">●</span> <span id="online-total">142</span> онлайн
+    <div class="flex justify-center pt-4">
+        <div class="flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full border border-white/5">
+            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">227 online</span>
         </div>
-        
-        <div class="space-y-3 mt-4">
-            <div onclick="alert('Lucky PvP coming soon in next update!')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all">
-                <div>
-                    <h2 class="text-xl font-black italic uppercase leading-none mb-1">Lucky</h2>
-                    <p class="text-[11px] text-gray-400 font-medium tracking-tight">PvP Battle for TON</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-600/20">×2</div>
+    </div>
+
+    <div class="px-5 py-6 grid grid-cols-2 gap-3">
+        <div class="ui-panel p-3.5 flex items-center gap-3">
+            <div class="relative">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" class="w-9 h-9 rounded-full bg-orange-500 border-2 border-white/5">
+                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-[#0b0e11]"></div>
+            </div>
+            <div class="overflow-hidden">
+                <p class="text-[9px] text-gray-500 font-black uppercase truncate">@Magikmoney</p>
+                <p class="text-xs font-black italic text-blue-400 leading-none mt-1">+0 TON</p>
+            </div>
+        </div>
+        <div class="ui-panel p-3.5 flex items-center gap-3 border-orange-500/10">
+            <div class="relative">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ace" class="w-9 h-9 rounded-full bg-blue-600 border-2 border-white/5">
+                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full border-2 border-[#0b0e11]"></div>
+            </div>
+            <div class="overflow-hidden">
+                <p class="text-[9px] text-gray-500 font-black uppercase truncate">@giftgambler_a...</p>
+                <p class="text-xs font-black italic text-yellow-500 leading-none mt-1">+48603 TON</p>
             </div>
         </div>
     </div>
 
-    <div id="screen-market" class="hidden min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
-        <div class="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20">
-            <span class="text-4xl">🏪</span>
+    <div class="text-center mb-6">
+        <span class="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Total Pot</span>
+        <div class="text-2xl font-black italic mt-1 text-white tracking-tighter">
+            2.67 <span class="text-blue-500">TON</span>
         </div>
-        <h1 class="text-5xl font-black italic uppercase mb-2 coming-soon-glow">MARKET</h1>
-        <p class="text-blue-500 font-bold tracking-[0.4em] uppercase text-[10px]">Coming Soon</p>
+    </div>
+
+    <div class="relative w-[310px] h-[310px] mx-auto neon-glow rounded-full">
+        <div class="absolute -top-2 left-1/2 -translate-x-1/2 z-30 w-6 h-7 bg-white shadow-xl" style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
         
-        <div class="mt-12 glass p-6 w-full max-w-[280px]">
-            <p class="text-gray-400 text-[12px] font-medium leading-relaxed">
-                The global marketplace is currently under development. <br><br> 
-                <span class="text-white">Stay tuned for updates!</span>
-            </p>
+        <div class="timer-hub">
+            <p class="text-xl font-black italic text-white">00:00</p>
         </div>
+
+        <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90 scale-95">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#d61a81" stroke-width="4" stroke-dasharray="60 100" />
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#6366f1" stroke-width="4" stroke-dasharray="20 100" stroke-dashoffset="-60" />
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#06b6d4" stroke-width="4" stroke-dasharray="20 100" stroke-dashoffset="-80" />
+        </svg>
     </div>
 
-    <div id="screen-profile" class="hidden p-6">
-        <div class="flex flex-col items-center mb-8">
-            <div class="w-20 h-20 bg-gray-800 rounded-full border-2 border-white/10 mb-4"></div>
-            <h2 class="text-xl font-black italic uppercase">@player_one</h2>
-        </div>
-        <div class="glass p-6">
-            <p class="text-gray-500 text-[10px] font-bold uppercase mb-1">Current Balance</p>
-            <p class="text-3xl font-black italic">1,250 ⭐</p>
-        </div>
+    <div class="px-6 grid grid-cols-2 gap-4 mt-12 mb-24">
+        <button class="ui-panel py-4 text-[11px] font-black uppercase tracking-widest text-gray-300">Add to PvP</button>
+        <button class="btn-ton-main py-4 text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+            🚀 4.07 TON
+        </button>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around py-5 px-4 z-50">
-        <div onclick="showTab('solo')" id="nav-solo" class="nav-item active flex flex-col items-center gap-1">
-            <span class="text-xl">⚙️</span>
-            <span class="text-[9px] font-bold uppercase tracking-tighter">Solo</span>
+    <div class="fixed bottom-0 left-0 right-0 nav-bar flex justify-around items-center py-4 px-2">
+        <div class="nav-link active flex flex-col items-center">
+            <span class="text-xl">⚔️</span>
+            <span class="text-[9px] font-black uppercase mt-1">PvP</span>
         </div>
-        <div onclick="showTab('market')" id="nav-market" class="nav-item flex flex-col items-center gap-1">
+        <div class="nav-link flex flex-col items-center">
+            <span class="text-xl">🎰</span>
+            <span class="nav-text text-[9px] font-black uppercase mt-1">Solo</span>
+        </div>
+        <div class="nav-link flex flex-col items-center">
+            <span class="text-xl">🎁</span>
+            <span class="nav-text text-[9px] font-black uppercase mt-1">Gifts</span>
+        </div>
+        <div class="nav-link flex flex-col items-center">
             <span class="text-xl">🏪</span>
-            <span class="text-[9px] font-bold uppercase tracking-tighter">Market</span>
-        </div>
-        <div onclick="showTab('profile')" id="nav-profile" class="nav-item flex flex-col items-center gap-1">
-            <span class="text-xl">👤</span>
-            <span class="text-[9px] font-bold uppercase tracking-tighter">Profile</span>
-        </div>
-    </nav>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            projectId: "duels-1fb6b",
-            storageBucket: "duels-1fb6b.firebasestorage.app",
-            messagingSenderId: "745698956226",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // Навигация
-        window.showTab = (tabId) => {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-' + tabId).classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.getElementById('nav-' + tabId).classList.add('active');
-        };
-
-        // Реальный онлайн из твоей базы
-        onValue(ref(db, 'online'), (s) => {
-            const count = s.exists() ? Object.keys(s.val()).length : 0;
-            document.getElementById('online-total').innerText = count + 140;
-        });
-    </script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { background: #000; color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 90px; overflow-x: hidden; user-select: none; }
-        .glass { background: #1c1c1e; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
-        .hidden { display: none; }
-        
-        /* Анимация появления экранов */
-        .page-active { animation: slideIn 0.3s ease-out forwards; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* КНБ Анимация жестов */
-        .rps-choice { transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .rps-choice:active { transform: scale(0.8) rotate(-5deg); }
-        .rps-selected { border: 3px solid #007aff !important; box-shadow: 0 0 20px rgba(0,122,255,0.4); transform: scale(1.05); }
-
-        /* Мины 3D Flip */
-        .mine-card { perspective: 1000px; aspect-ratio: 1/1; }
-        .mine-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
-        .flipped { transform: rotateY(180deg); }
-        .mine-front, .mine-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; display: flex; items-center; justify-content: center; }
-        .mine-front { background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); }
-        .mine-back { transform: rotateY(180deg); }
-
-        /* Монетка */
-        .coin-spin { animation: coinRotate 3s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
-        @keyframes coinRotate { from { transform: rotateY(0deg); } to { transform: rotateY(1800deg); } }
-    </style>
-</head>
-<body>
-
-    <div class="p-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-[10px] font-bold">⭐</div>
-            <span id="global-balance" class="text-xl font-black italic">1000</span>
-        </div>
-        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-            <span class="text-green-500">●</span> <span id="online-val">142</span> online
+            <span class="nav-text text-[9px] font-black uppercase mt-1">Shop</span>
         </div>
     </div>
 
-    <div id="screen-solo" class="p-4 page-active">
-        <div class="space-y-4">
-            <div onclick="openGame('mines')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all cursor-pointer border-l-4 border-orange-500">
-                <div><h2 class="text-xl font-black italic uppercase">Mines PvP</h2><p class="text-xs text-gray-400">Field 3x3</p></div>
-                <div class="text-3xl">💣</div>
-            </div>
-            <div onclick="openGame('rps')" class="glass p-6 flex justify-between items-center active:scale-95 transition-all cursor-pointer border-l-4 border-blue-500">
-                <div><h2 class="text-xl font-black italic uppercase">RPS Battle</h2><p class="text-xs text-gray-400">Rock Paper Scissors</p></div>
-                <div class="text-3xl">✊</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-game-mines" class="p-4 hidden flex-col items-center">
-        <div class="w-full flex justify-between mb-10"><button onclick="closeGame()" class="text-gray-500 font-bold">✕ BACK</button><span class="text-orange-500 font-black italic">MINES</span><div></div></div>
-        <div id="mines-grid" class="grid grid-cols-3 gap-3 w-full max-w-[320px]"></div>
-        <button id="mines-start" onclick="initMines()" class="mt-10 w-full bg-orange-600 p-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-orange-600/20">Start Game (100 ⭐)</button>
-    </div>
-
-    <div id="screen-game-rps" class="p-4 hidden flex-col items-center text-center">
-        <div class="w-full flex justify-between mb-8"><button onclick="closeGame()" class="text-gray-500 font-bold">✕ BACK</button><span class="text-blue-500 font-black italic">RPS BATTLE</span><div></div></div>
-        <div id="rps-result" class="text-4xl font-black italic mb-10 h-10">WHO WINS?</div>
-        <div class="grid grid-cols-3 gap-4 w-full">
-            <div id="rps-rock" onclick="playRPS('rock')" class="glass rps-choice p-6 text-3xl cursor-pointer">✊</div>
-            <div id="rps-paper" onclick="playRPS('paper')" class="glass rps-choice p-6 text-3xl cursor-pointer">✋</div>
-            <div id="rps-scissors" onclick="playRPS('scissors')" class="glass rps-choice p-6 text-3xl cursor-pointer">✌️</div>
-        </div>
-    </div>
-
-    <div id="screen-market" class="hidden p-10 text-center flex-col items-center justify-center min-h-[60vh]">
-        <div class="text-6xl mb-4">🏪</div>
-        <h1 class="text-4xl font-black italic uppercase">Market</h1>
-        <p class="text-blue-500 font-bold tracking-widest mt-2 uppercase text-[10px]">Coming soon in update 2.0</p>
-    </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-white/5 flex justify-around py-5 z-50">
-        <div onclick="showTab('solo')" class="flex flex-col items-center gap-1 opacity-100 text-blue-500"><span class="text-xl">⚙️</span><span class="text-[9px] font-bold">GAMES</span></div>
-        <div onclick="showTab('market')" class="flex flex-col items-center gap-1 opacity-50"><span class="text-xl">🏪</span><span class="text-[9px] font-bold">MARKET</span></div>
-    </nav>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
-            authDomain: "duels-1fb6b.firebaseapp.com",
-            databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
-            projectId: "duels-1fb6b",
-            storageBucket: "duels-1fb6b.firebasestorage.app",
-            messagingSenderId: "745698956226",
-            appId: "1:745698956226:web:27cd811a6633946e85fc5b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        let balance = 1000;
-
-        // --- ОБЩАЯ НАВИГАЦИЯ ---
-        window.showTab = (id) => {
-            document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-' + id).classList.remove('hidden');
-        };
-
-        window.openGame = (game) => {
-            document.getElementById('screen-solo').classList.add('hidden');
-            document.getElementById('screen-game-' + game).classList.remove('hidden');
-            if(game === 'mines') initMines();
-        };
-
-        window.closeGame = () => {
-            document.querySelectorAll('[id^="screen-game-"]').forEach(s => s.classList.add('hidden'));
-            document.getElementById('screen-solo').classList.remove('hidden');
-        };
-
-        // --- ЛОГИКА MINES ---
-        let minesPos = [];
-        window.initMines = () => {
-            const grid = document.getElementById('mines-grid');
-            grid.innerHTML = '';
-            minesPos = [Math.floor(Math.random()*9), Math.floor(Math.random()*9)];
-            for(let i=0; i<9; i++) {
-                grid.innerHTML += `
-                    <div class="mine-card" onclick="flipMine(this, ${i})">
-                        <div class="mine-inner" id="mine-${i}">
-                            <div class="mine-front"></div>
-                            <div class="mine-back bg-blue-600 text-2xl">💎</div>
-                        </div>
-                    </div>`;
-            }
-        };
-
-        window.flipMine = (el, idx) => {
-            const inner = el.querySelector('.mine-inner');
-            if(inner.classList.contains('flipped')) return;
-            inner.classList.add('flipped');
-            if(minesPos.includes(idx)) {
-                inner.querySelector('.mine-back').className = "mine-back bg-red-600 text-2xl";
-                inner.querySelector('.mine-back').innerText = "💣";
-                setTimeout(() => { alert("BOOM!"); initMines(); }, 500);
-            } else {
-                balance += 50;
-                document.getElementById('global-balance').innerText = balance;
-            }
-        };
-
-        // --- ЛОГИКА RPS ---
-        window.playRPS = (userChoice) => {
-            const choices = ['rock', 'paper', 'scissors'];
-            const botChoice = choices[Math.floor(Math.random()*3)];
-            const icons = { rock: '✊', paper: '✋', scissors: '✌️' };
-            
-            document.querySelectorAll('.rps-choice').forEach(b => b.classList.remove('rps-selected'));
-            document.getElementById('rps-' + userChoice).classList.add('rps-selected');
-            
-            const resEl = document.getElementById('rps-result');
-            resEl.innerText = icons[botChoice] + " VS " + icons[userChoice];
-            
-            if(userChoice === botChoice) resEl.style.color = "gray";
-            else if((userChoice==='rock' && botChoice==='scissors') || (userChoice==='paper' && botChoice==='rock') || (userChoice==='scissors' && botChoice==='paper')) {
-                resEl.style.color = "#34c759";
-                balance += 200;
-            } else {
-                resEl.style.color = "#ff3b30";
-                balance -= 100;
-            }
-            document.getElementById('global-balance').innerText = balance;
-        };
-    </script>
 </body>
 </html>
