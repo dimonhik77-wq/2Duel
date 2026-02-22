@@ -3026,4 +3026,941 @@
         alert("Сохранено");
     }
 </script>
+<!-- === БЛОК 1 — ГЛАВНЫЙ ЭКРАН / ХАБ (БЕЗ СЛОВА "ЧАСТЬ" В UI) === -->
+<style>
+    #mainHub {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at top, #151528, #050509);
+        color: #fff;
+        padding: 20px;
+        box-sizing: border-box;
+        z-index: 40;
+        font-family: system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    #mainHubHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .main-balance {
+        background: #111322;
+        border-radius: 999px;
+        padding: 8px 14px;
+        border: 1px solid #26293a;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .main-balance span {
+        font-weight: 600;
+    }
+
+    .main-nav {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .main-nav-btn {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: none;
+        background: #111322;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+        border: 1px solid #26293a;
+        white-space: nowrap;
+    }
+
+    .main-nav-btn.primary {
+        background: linear-gradient(135deg, #4b6bff, #3bd9d9);
+        color: #000;
+        border: none;
+        font-weight: 600;
+    }
+
+    .main-section-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 10px;
+    }
+
+    .game-card {
+        background: #111322;
+        border-radius: 16px;
+        padding: 12px;
+        border: 1px solid #26293a;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 6px;
+        cursor: pointer;
+        transition: 0.15s;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .game-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(0,0,0,0.7);
+    }
+
+    .game-card-title {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .game-card-tag {
+        font-size: 11px;
+        color: #9aa0ff;
+    }
+
+    .game-card-icon {
+        font-size: 26px;
+        align-self: flex-end;
+    }
+</style>
+
+<div id="mainHub">
+    <div id="mainHubHeader">
+        <div>
+            <div style="font-size:13px;color:#aaa;">Добро пожаловать</div>
+            <div style="font-size:16px;font-weight:600;" id="mainUserName">Игрок</div>
+        </div>
+        <div class="main-balance">
+            ⭐ <span id="mainBalance">0</span>
+        </div>
+    </div>
+
+    <div class="main-nav">
+        <button class="main-nav-btn primary" onclick="openGamesSection()">Игры</button>
+        <button class="main-nav-btn" onclick="openProfile()">Профиль</button>
+        <button class="main-nav-btn" onclick="openShop()">Магазин</button>
+        <button class="main-nav-btn" onclick="openOnline()">Онлайн</button>
+        <button class="main-nav-btn" onclick="openSettings()">Настройки</button>
+    </div>
+
+    <div>
+        <div class="main-section-title">Игры</div>
+        <div class="games-grid">
+            <div class="game-card" onclick="openCoinGame()">
+                <div class="game-card-title">Орёл и решка</div>
+                <div class="game-card-tag">Быстрая ставка</div>
+                <div class="game-card-icon">🪙</div>
+            </div>
+
+            <div class="game-card" onclick="openMinesGame()">
+                <div class="game-card-title">Мины</div>
+                <div class="game-card-tag">Риск и множители</div>
+                <div class="game-card-icon">💣</div>
+            </div>
+
+            <div class="game-card" onclick="openRpsGame()">
+                <div class="game-card-title">Камень, ножницы, бумага</div>
+                <div class="game-card-tag">Классика</div>
+                <div class="game-card-icon">✊✌️✋</div>
+            </div>
+
+            <div class="game-card" onclick="openRouletteGame()">
+                <div class="game-card-title">Рулетка</div>
+                <div class="game-card-tag">Неоновый риск</div>
+                <div class="game-card-icon">🎡</div>
+            </div>
+
+            <div class="game-card" onclick="openPvpGame()">
+                <div class="game-card-title">PvP дуэли</div>
+                <div class="game-card-tag">Игра против игрока</div>
+                <div class="game-card-icon">⚔️</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ХАБ: обновление баланса (ты можешь вызывать эту функцию из своего кода)
+    function updateMainBalance(stars) {
+        const el = document.getElementById("mainBalance");
+        if (el) el.textContent = stars;
+    }
+
+    // ХАБ: обновление имени (если есть в Firebase)
+    function updateMainUserName(name) {
+        const el = document.getElementById("mainUserName");
+        if (el && name) el.textContent = name;
+    }
+
+    // Переходы (здесь просто заглушки — подставь свои функции/экраны)
+    function openGamesSection() {
+        // уже на главном, можно потом сделать отдельный экран
+    }
+
+    function openProfile() {
+        if (window.openProfileScreen) openProfileScreen();
+        else if (window.openProfile) openProfile();
+    }
+
+    function openShop() {
+        if (window.openShop) openShop();
+    }
+
+    function openOnline() {
+        if (window.openLobby) openLobby();
+    }
+
+    function openSettings() {
+        if (window.openSettings) openSettings();
+    }
+
+    // Игры — вызываем твои экраны
+    function openCoinGame() {
+        // спрятать хаб, показать твой экран орла
+        document.getElementById("mainHub").style.display = "none";
+        if (window.openCoin) window.openCoin();
+        if (document.getElementById("coinScreen")) {
+            document.getElementById("coinScreen").style.display = "block";
+        }
+    }
+
+    function openMinesGame() {
+        document.getElementById("mainHub").style.display = "none";
+        if (window.openMines) window.openMines();
+        if (document.getElementById("minesScreen")) {
+            document.getElementById("minesScreen").style.display = "block";
+        }
+    }
+
+    function openRpsGame() {
+        document.getElementById("mainHub").style.display = "none";
+        if (window.openRps) window.openRps();
+        if (document.getElementById("rpsScreen")) {
+            document.getElementById("rpsScreen").style.display = "block";
+        }
+    }
+
+    function openPvpGame() {
+        document.getElementById("mainHub").style.display = "none";
+        if (window.openPvp) window.openPvp();
+        if (document.getElementById("pvpScreen")) {
+            document.getElementById("pvpScreen").classList.add("active");
+        }
+    }
+
+    // Вернуться на хаб из игр — ты можешь вызывать showMainHub() из своих экранов
+    function showMainHub() {
+        document.getElementById("mainHub").style.display = "flex";
+    }
+
+    window.showMainHub = showMainHub;
+    window.updateMainBalance = updateMainBalance;
+    window.updateMainUserName = updateMainUserName;
+</script>
+<!-- === ЧАСТЬ 2 — ВСЕ ИГРЫ В ЕДИНОМ СТИЛЕ (ОРЁЛ, МИНЫ, КНБ, PVP) === -->
+
+<style>
+    .game-screen {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at top, #151528, #050509);
+        color: #fff;
+        padding: 20px;
+        box-sizing: border-box;
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        z-index: 50;
+        font-family: system-ui;
+    }
+
+    .game-screen.active {
+        display: flex;
+    }
+
+    .game-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .game-title {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .game-back {
+        font-size: 13px;
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    .game-card {
+        background: #111322;
+        border-radius: 16px;
+        border: 1px solid #26293a;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    .bet-input {
+        width: 100%;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid #26293a;
+        background: #0d0d15;
+        color: #fff;
+        text-align: center;
+        font-size: 16px;
+        outline: none;
+        margin-top: 6px;
+    }
+
+    .game-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #4b6bff, #3bd9d9);
+        color: #000;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 15px;
+        margin-top: 10px;
+        box-shadow: 0 0 18px rgba(75,107,255,0.5);
+    }
+
+    .game-info {
+        font-size: 14px;
+        color: #aaa;
+        min-height: 20px;
+        margin-top: 6px;
+    }
+
+    /* КНБ */
+    .rps-options {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .rps-btn {
+        flex: 1;
+        padding: 14px 0;
+        border-radius: 12px;
+        background: #111322;
+        border: 1px solid #26293a;
+        text-align: center;
+        font-size: 30px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .rps-btn.active {
+        background: linear-gradient(135deg, #ffb347, #ff4b4b);
+        color: #000;
+        border: none;
+        box-shadow: 0 0 14px rgba(255,180,70,0.6);
+    }
+
+    /* Мины */
+    .mines-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    .mine-cell {
+        width: 100%;
+        padding-top: 100%;
+        position: relative;
+        background: #111322;
+        border: 1px solid #26293a;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .mine-cell.revealed {
+        background: #3bd96b;
+        border-color: #3bd96b;
+    }
+
+    .mine-cell.bomb {
+        background: #ff4b4b;
+        border-color: #ff4b4b;
+    }
+
+    .mine-cell-content {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    /* PvP */
+    .pvp-options {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .pvp-btn {
+        flex: 1;
+        padding: 14px 0;
+        border-radius: 12px;
+        background: #111322;
+        border: 1px solid #26293a;
+        text-align: center;
+        font-size: 30px;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .pvp-btn.active {
+        background: linear-gradient(135deg, #4b6bff, #3bd9d9);
+        color: #000;
+        border: none;
+        box-shadow: 0 0 14px rgba(75,107,255,0.6);
+    }
+</style>
+
+<!-- === ОРЁЛ И РЕШКА === -->
+<div id="coinScreen" class="game-screen">
+    <div class="game-header">
+        <div class="game-title">Орёл и решка</div>
+        <div class="game-back" onclick="showMainHub()">Назад</div>
+    </div>
+
+    <div class="game-card">
+        <div>Ставка</div>
+        <input id="coinBet" class="bet-input" type="number" value="100">
+
+        <button class="game-btn" onclick="coinFlip()">Крутить</button>
+
+        <div id="coinInfo" class="game-info"></div>
+    </div>
+</div>
+
+<script>
+    function coinFlip() {
+        const bet = parseInt(document.getElementById("coinBet").value);
+        const info = document.getElementById("coinInfo");
+
+        if (!removeStars(bet)) {
+            info.textContent = "Недостаточно ⭐";
+            return;
+        }
+
+        const win = Math.random() < 0.5;
+
+        if (win) {
+            addStars(bet * 2);
+            info.textContent = "Выигрыш! +"+(bet*2)+" ⭐";
+        } else {
+            info.textContent = "Проигрыш.";
+        }
+    }
+</script>
+
+<!-- === МИНЫ === -->
+<div id="minesScreen" class="game-screen">
+    <div class="game-header">
+        <div class="game-title">Мины</div>
+        <div class="game-back" onclick="showMainHub()">Назад</div>
+    </div>
+
+    <div class="game-card">
+        <div>Ставка</div>
+        <input id="minesBet" class="bet-input" type="number" value="100">
+
+        <button class="game-btn" onclick="startMines()">Играть</button>
+
+        <div id="minesInfo" class="game-info"></div>
+
+        <div id="minesGrid" class="mines-grid"></div>
+    </div>
+</div>
+
+<script>
+    let mines = [];
+    let minesRevealed = 0;
+
+    function startMines() {
+        const grid = document.getElementById("minesGrid");
+        const info = document.getElementById("minesInfo");
+        const bet = parseInt(document.getElementById("minesBet").value);
+
+        if (!removeStars(bet)) {
+            info.textContent = "Недостаточно ⭐";
+            return;
+        }
+
+        info.textContent = "Игра началась!";
+        grid.innerHTML = "";
+        mines = [];
+        minesRevealed = 0;
+
+        for (let i = 0; i < 25; i++) {
+            mines.push(Math.random() < 0.2);
+        }
+
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement("div");
+            cell.className = "mine-cell";
+            cell.onclick = () => revealMine(i, cell, bet);
+            cell.innerHTML = `<div class="mine-cell-content"></div>`;
+            grid.appendChild(cell);
+        }
+    }
+
+    function revealMine(i, cell, bet) {
+        if (cell.classList.contains("revealed")) return;
+
+        if (mines[i]) {
+            cell.classList.add("bomb");
+            document.getElementById("minesInfo").textContent = "Бомба! Игра окончена.";
+            return;
+        }
+
+        cell.classList.add("revealed");
+        minesRevealed++;
+
+        const win = Math.floor(bet * (1 + minesRevealed * 0.2));
+        addStars(win);
+
+        document.getElementById("minesInfo").textContent = "Выигрыш: +" + win + " ⭐";
+    }
+</script>
+
+<!-- === КАМЕНЬ НОЖНИЦЫ БУМАГА === -->
+<div id="rpsScreen" class="game-screen">
+    <div class="game-header">
+        <div class="game-title">Камень, ножницы, бумага</div>
+        <div class="game-back" onclick="showMainHub()">Назад</div>
+    </div>
+
+    <div class="game-card">
+        <div>Ставка</div>
+        <input id="rpsBet" class="bet-input" type="number" value="100">
+
+        <div class="rps-options">
+            <div class="rps-btn" data-move="rock">✊</div>
+            <div class="rps-btn" data-move="scissors">✌️</div>
+            <div class="rps-btn" data-move="paper">✋</div>
+        </div>
+
+        <button class="game-btn" onclick="playRps()">Играть</button>
+
+        <div id="rpsInfo" class="game-info"></div>
+    </div>
+</div>
+
+<script>
+    let rpsMove = null;
+
+    document.querySelectorAll(".rps-btn").forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll(".rps-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            rpsMove = btn.dataset.move;
+        };
+    });
+
+    function playRps() {
+        const bet = parseInt(document.getElementById("rpsBet").value);
+        const info = document.getElementById("rpsInfo");
+
+        if (!rpsMove) {
+            info.textContent = "Выбери жест.";
+            return;
+        }
+
+        if (!removeStars(bet)) {
+            info.textContent = "Недостаточно ⭐";
+            return;
+        }
+
+        const moves = ["rock", "scissors", "paper"];
+        const bot = moves[Math.floor(Math.random() * 3)];
+
+        const win =
+            (rpsMove === "rock" && bot === "scissors") ||
+            (rpsMove === "scissors" && bot === "paper") ||
+            (rpsMove === "paper" && bot === "rock");
+
+        if (win) {
+            addStars(bet * 2);
+            info.textContent = "Победа! Бот выбрал " + bot;
+        } else if (rpsMove === bot) {
+            addStars(bet);
+            info.textContent = "Ничья. Бот выбрал " + bot;
+        } else {
+            info.textContent = "Проигрыш. Бот выбрал " + bot;
+        }
+    }
+</script>
+
+<!-- === PVP === -->
+<div id="pvpScreen" class="game-screen">
+    <div class="game-header">
+        <div class="game-title">PvP дуэли</div>
+        <div class="game-back" onclick="showMainHub()">Назад</div>
+    </div>
+
+    <div class="game-card">
+        <div>Ставка</div>
+        <input id="pvpBet" class="bet-input" type="number" value="100">
+
+        <button class="game-btn" onclick="pvpStart()">Создать комнату</button>
+
+        <div id="pvpInfo" class="game-info"></div>
+
+        <div class="pvp-options">
+            <div class="pvp-btn" data-move="rock">✊</div>
+            <div class="pvp-btn" data-move="scissors">✌️</div>
+            <div class="pvp-btn" data-move="paper">✋</div>
+        </div>
+
+        <button class="game-btn" onclick="pvpFight()">Играть</button>
+    </div>
+</div>
+
+<script>
+    let pvpMove = null;
+
+    document.querySelectorAll(".pvp-btn").forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll(".pvp-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            pvpMove = btn.dataset.move;
+        };
+    });
+
+    function pvpStart() {
+        document.getElementById("pvpInfo").textContent = "Комната создана (локально).";
+    }
+
+    function pvpFight() {
+        const bet = parseInt(document.getElementById("pvpBet").value);
+        const info = document.getElementById("pvpInfo");
+
+        if (!pvpMove) {
+            info.textContent = "Выбери жест.";
+            return;
+        }
+
+        if (!removeStars(bet)) {
+            info.textContent = "Недостаточно ⭐";
+            return;
+        }
+
+        const moves = ["rock", "scissors", "paper"];
+        const bot = moves[Math.floor(Math.random() * 3)];
+
+        const win =
+            (pvpMove === "rock" && bot === "scissors") ||
+            (pvpMove === "scissors" && bot === "paper") ||
+            (pvpMove === "paper" && bot === "rock");
+
+        if (win) {
+            addStars(bet * 2);
+            info.textContent = "Победа! Противник выбрал " + bot;
+        } else if (pvpMove === bot) {
+            addStars(bet);
+            info.textContent = "Ничья. Противник выбрал " + bot;
+        } else {
+            info.textContent = "Проигрыш. Противник выбрал " + bot;
+        }
+    }
+</script>
+<!-- === ЧАСТЬ 3 — ЕДИНЫЙ FIREBASE ДЛЯ ВСЕГО ПРИЛОЖЕНИЯ === -->
+<script type="module">
+    // ===== 1. ИНИЦИАЛИЗАЦИЯ FIREBASE (ТВОЙ КЛЮЧ) =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getDatabase, ref, set, get, update, onValue, push 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // ТВОЙ КОНФИГ (КАК ТЫ ДАЛ)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBu4aaNbvARCtvRE1SGsNpkHRYAm3NK_I0",
+      authDomain: "duels-1fb6b.firebaseapp.com",
+      databaseURL: "https://duels-1fb6b-default-rtdb.firebaseio.com",
+      projectId: "duels-1fb6b",
+      storageBucket: "duels-1fb6b.firebasestorage.app",
+      messagingSenderId: "745698956226",
+      appId: "1:745698956226:web:27cd811a6633946e85fc5b",
+      measurementId: "G-3BS344MXBP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+
+    // ===== 2. UID ИГРОКА (TELEGRAM → FIREBASE, ИНАЧЕ ЛОКАЛЬНЫЙ) =====
+    function detectUID() {
+        try {
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe?.user?.id) {
+                return "tg_" + Telegram.WebApp.initDataUnsafe.user.id;
+            }
+        } catch(e) {}
+        const local = localStorage.getItem("local_uid");
+        if (local) return local;
+        const gen = "local_" + Math.random().toString(36).slice(2);
+        localStorage.setItem("local_uid", gen);
+        return gen;
+    }
+
+    if (!window.currentUID) {
+        window.currentUID = detectUID();
+    }
+
+    const UID = window.currentUID;
+
+    // ===== 3. СОЗДАНИЕ ПРОФИЛЯ ПРИ ПЕРВОМ ЗАПУСКЕ =====
+    async function fbCreateUserIfNeeded() {
+        const userRef = ref(db, "users/" + UID);
+        const snap = await get(userRef);
+
+        if (!snap.exists()) {
+            const now = Date.now();
+            await set(userRef, {
+                balance: 1000,
+                name: "Игрок",
+                avatar: "🙂",
+                created: now,
+                online: true,
+                lastSeen: now
+            });
+        }
+    }
+
+    // ===== 4. ОНЛАЙН СТАТУС (PING + lastSeen) =====
+    function fbSetOnline() {
+        update(ref(db, "users/" + UID), {
+            online: true,
+            lastSeen: Date.now()
+        });
+    }
+
+    function fbSetOffline() {
+        update(ref(db, "users/" + UID), {
+            online: false,
+            lastSeen: Date.now()
+        });
+    }
+
+    setInterval(() => {
+        fbSetOnline();
+    }, 20000);
+
+    window.addEventListener("beforeunload", () => {
+        fbSetOffline();
+    });
+
+    // ===== 5. СИНХРОНИЗАЦИЯ ПРОФИЛЯ С ХАБОМ (ИМЯ + БАЛАНС) =====
+    function fbWatchUser() {
+        const userRef = ref(db, "users/" + UID);
+        onValue(userRef, snap => {
+            if (!snap.exists()) return;
+            const data = snap.val();
+
+            // имя в хабе
+            if (window.updateMainUserName && data.name) {
+                window.updateMainUserName(data.name);
+            }
+
+            // баланс в хабе
+            if (document.getElementById("mainBalance")) {
+                document.getElementById("mainBalance").textContent = data.balance ?? 0;
+            }
+
+            // если есть экран профиля из части 21 — он тоже подтянется
+            if (document.getElementById("profileScreen")) {
+                const nameInput = document.getElementById("profileName");
+                const avatarEl  = document.getElementById("profileAvatar");
+                const idEl      = document.getElementById("profileID");
+                const balEl     = document.getElementById("profileBalance");
+                const statusEl  = document.getElementById("profileStatus");
+                const createdEl = document.getElementById("profileCreated");
+
+                if (nameInput) nameInput.value = data.name || "";
+                if (avatarEl)  avatarEl.textContent = data.avatar || "🙂";
+                if (idEl)      idEl.textContent = UID;
+                if (balEl)     balEl.textContent = (data.balance ?? 0) + " ⭐";
+                if (statusEl)  statusEl.textContent = data.online ? "Онлайн" : "Оффлайн";
+                if (createdEl && data.created) {
+                    createdEl.textContent = new Date(data.created).toLocaleDateString();
+                }
+            }
+        });
+    }
+
+    // ===== 6. БАЛАНС: ПЕРЕПОДКЛЮЧАЕМ addStars / removeStars К FIREBASE =====
+    async function fbGetBalance() {
+        const snap = await get(ref(db, "users/" + UID + "/balance"));
+        if (!snap.exists()) return 0;
+        return snap.val() || 0;
+    }
+
+    async function fbSetBalance(newBalance) {
+        await update(ref(db, "users/" + UID), { balance: newBalance });
+        const el = document.getElementById("mainBalance");
+        if (el) el.textContent = newBalance;
+        return newBalance;
+    }
+
+    async function fbAddStars(amount) {
+        const cur = await fbGetBalance();
+        const next = cur + amount;
+        await fbSetBalance(next);
+        return next;
+    }
+
+    async function fbRemoveStars(amount) {
+        const cur = await fbGetBalance();
+        if (cur < amount) return false;
+        const next = cur - amount;
+        await fbSetBalance(next);
+        return true;
+    }
+
+    // Переопределяем глобальные функции, чтобы ВСЁ шло через Firebase
+    window.addStars = function(amount) {
+        fbAddStars(amount);
+        return true;
+    };
+
+    window.removeStars = function(amount) {
+        // ВНИМАНИЕ: теперь асинхронно, но старый код ждёт sync true/false.
+        // Для простоты: делаем "мягкую" проверку через локальный mainBalance,
+        // а реальный баланс обновляем в Firebase.
+        const el = document.getElementById("mainBalance");
+        let cur = el ? parseInt(el.textContent) || 0 : 0;
+        if (cur < amount) return false;
+        cur -= amount;
+        if (el) el.textContent = cur;
+        fbSetBalance(cur);
+        return true;
+    };
+
+    // ===== 7. ЛОГ ИГР (ОРЁЛ, МИНЫ, КНБ, РУЛЕТКА, PVP) =====
+    async function fbLogGame(game, bet, result) {
+        await push(ref(db, "logs/" + UID), {
+            game,
+            bet,
+            result,
+            time: Date.now()
+        });
+    }
+
+    // Подключаем лог к существующим играм (если хочешь — можешь расширить)
+    // Орёл
+    const oldCoinFlip = window.coinFlip;
+    if (typeof oldCoinFlip === "function") {
+        window.coinFlip = async function() {
+            const bet = parseInt(document.getElementById("coinBet").value) || 0;
+            const before = await fbGetBalance();
+            oldCoinFlip();
+            setTimeout(async () => {
+                const after = await fbGetBalance();
+                const diff = after - before;
+                await fbLogGame("coin", bet, diff >= 0 ? "+"+diff : diff.toString());
+            }, 400);
+        };
+    }
+
+    // Мины
+    const oldStartMines = window.startMines;
+    if (typeof oldStartMines === "function") {
+        window.startMines = async function() {
+            const bet = parseInt(document.getElementById("minesBet").value) || 0;
+            const before = await fbGetBalance();
+            oldStartMines();
+            setTimeout(async () => {
+                const after = await fbGetBalance();
+                const diff = after - before;
+                await fbLogGame("mines", bet, diff >= 0 ? "+"+diff : diff.toString());
+            }, 1500);
+        };
+    }
+
+    // КНБ
+    const oldPlayRps = window.playRps;
+    if (typeof oldPlayRps === "function") {
+        window.playRps = async function() {
+            const bet = parseInt(document.getElementById("rpsBet").value) || 0;
+            const before = await fbGetBalance();
+            oldPlayRps();
+            setTimeout(async () => {
+                const after = await fbGetBalance();
+                const diff = after - before;
+                await fbLogGame("rps", bet, diff >= 0 ? "+"+diff : diff.toString());
+            }, 400);
+        };
+    }
+
+    // Рулетка
+    const oldSpinRoulette = window.spinRoulette;
+    if (typeof oldSpinRoulette === "function") {
+        window.spinRoulette = async function() {
+            const bet = parseInt(document.getElementById("rouletteBet").value) || 0;
+            const before = await fbGetBalance();
+            oldSpinRoulette();
+            setTimeout(async () => {
+                const after = await fbGetBalance();
+                const diff = after - before;
+                await fbLogGame("roulette", bet, diff >= 0 ? "+"+diff : diff.toString());
+            }, 3500);
+        };
+    }
+
+    // PvP (локальный пока)
+    const oldPvpFight = window.pvpFight;
+    if (typeof oldPvpFight === "function") {
+        window.pvpFight = async function() {
+            const bet = parseInt(document.getElementById("pvpBet").value) || 0;
+            const before = await fbGetBalance();
+            oldPvpFight();
+            setTimeout(async () => {
+                const after = await fbGetBalance();
+                const diff = after - before;
+                await fbLogGame("pvp_local", bet, diff >= 0 ? "+"+diff : diff.toString());
+            }, 600);
+        };
+    }
+
+    // ===== 8. СТАРТ: СОЗДАТЬ ПОЛЬЗОВАТЕЛЯ, ВКЛЮЧИТЬ ОНЛАЙН, ПОДПИСАТЬСЯ НА ПРОФИЛЬ =====
+    (async () => {
+        await fbCreateUserIfNeeded();
+        fbSetOnline();
+        fbWatchUser();
+    })();
+
+    // Экспорт, если понадобится в следующих частях
+    window.fbAddStars = fbAddStars;
+    window.fbRemoveStars = fbRemoveStars;
+    window.fbLogGame = fbLogGame;
+</script>
 
